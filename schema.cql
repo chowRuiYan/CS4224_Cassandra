@@ -6,6 +6,34 @@ CREATE KEYSPACE wholesale WITH replication =
 
 USE wholesale;
 
+DROP TABLE IF EXISTS new_order_by_wd;
+CREATE TABLE IF NOT EXISTS new_order_by_wd (
+  w_id int,
+  d_id int,
+  c_id int,
+  c_last text,
+  c_discount decimal,
+  c_credit text,
+  next_o_id int static,
+  w_tax decimal static,
+  d_tax decimal static,
+  PRIMARY KEY ((w_id, d_id), c_id)
+)
+
+DROP TABLE IF EXISTS stock_by_items;
+CREATE TABLE IF NOT EXISTS stock_by_items (
+  i_id int,
+  w_id int,
+  s_quantity decimal,
+  s_ytd decimal,
+  s_order_cnt int,
+  s_remote_cnt int,
+  i_name text static,
+  i_price decimal static,
+  PRIMARY KEY (i_id, w_id)
+);
+
+
 -- DROP TABLE IF EXISTS warehouses;
 -- CREATE TABLE IF NOT EXISTS warehouses (
 --   W_ID int,

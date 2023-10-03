@@ -150,3 +150,38 @@ CREATE TABLE IF NOT EXISTS stock_by_items (
 --   PRIMARY KEY ((S_W_ID, S_I_ID))
 -- );
 	
+-- create xact 6-8 tables
+DROP TABLE IF EXISTS xact_six;
+CREATE TABLE IF NOT EXISTS xact_six (
+-- WIP
+);
+
+DROP TABLE IF EXISTS xact_seven;
+CREATE TABLE IF NOT EXISTS xact_seven (
+  C_W_ID int
+  C_D_ID int
+  C_BALANCE int
+  C_ID int
+  C_FIRST VARCHAR(16)
+  C_MIDDLE CHAR(2)
+  C_LAST VARCHAR(16)
+  D_NAME VARCHAR(10)
+  W_NAME VARCHAR(10)
+  PRIMARY KEY ((C_W_ID, C_D_ID, C_ID))
+);
+
+DROP TABLE IF EXISTS xact_eight;
+CREATE TABLE IF NOT EXISTS xact_eight (
+  OL_C_ID int
+  OL_W_ID int
+  OL_D_ID int
+  OL_O_ID int
+  OL_NUMBER int
+  OL_I_ID int
+  OL_DELIVERY_D timestamp
+  OL_AMOUNT int
+  OL_SUPPLY_W_ID int
+  OL_QUANTITY int
+  OL_DIST_INFO CHAR(24)
+  PRIMARY KEY ((OL_C_ID, OL_W_ID, OL_D_ID, OL_O_ID))
+);

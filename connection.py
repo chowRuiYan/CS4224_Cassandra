@@ -11,6 +11,21 @@ new_order_prepared = session.prepare('SELECT * FROM new_order_by_wd WHERE w_id=?
 stock_item_info_prepared = session.prepare('SELECT * FROM stock_by_items WHERE i_id=? and w_id=?')
 stock_item_update_prepared = session.prepare('UPDATE stock_by_items SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? WHERE i_id=? AND w_id=?')
 
+# xact 2
+payment_warehouse_select = session.prepare('SELECT * FROM warehouse WHERE w_id=?')
+payment_warehouse_update = session.prepare('UPDATE warehouse SET w_ytd=w_ytd+? WHERE w_id=?')
+payment_district_select = session.prepare('SELECT * FROM district WHERE d_w_id=? AND d_id=?')
+payment_district_update = session.prepare('UPDATE district SET d_ytd=d_ytd+? WHERE d_w_id=? AND d_id=?')
+payment_customer_by_wd_select = session.prepare('SELECT * FROM customer_by_wd WHERE c_w_id=? AND c_d_id=? AND c_id=?')
+payment_customer_by_wd_update = session.prepare('UPDATE customer_by_wd SET c_balance=c_balance-?, c_ytd_payment=c_ytd_payment+?, c_payment_cnt=c_payment_cnt+1 WHERE c_w_id=? AND c_d_id=? AND c_id=?')
+
+# xact 3
+delivery_order_by_wd_select_min = session.prepare('SELECT MIN(o_id) FROM order_by_wd WHERE o_w_id=? AND o_d_id=? AND o_carrier_id IS NULL')
+delivery_order_by_wd_select_cust = session.prepare('SELECT o_c_id FROM order_by_wd WHERE o_w_id=? AND o_d_id=? AND o_id=?')
+delivery_orderline_by_order_select = session.prepare('SELECT SUM(ol_amount) FROM orderline_by_order WHERE ol_w_id=? AND ol_d_id=? AND ol_o_id=?')
+delivery_order_by_wd_update = session.prepare('UPDATE order_by_wd SET o_carrier_id=? AND ol_delivery_d=? WHERE o_w_id=? AND o_d_id=? AND o_id=?')
+delivery_customer_by_wd_update = session.prepare('UPDATE customer_by_wd SET c_balance=c_balance+? AND c_delivery_cnt=c_delivery_cnt+1 WHERE c_w_id=? AND c_d_id=? AND c_id=?')
+
 # xact 4
 get_customer_last_order_prepared = session.prepare(
     'SELECT * FROM orders_by_customers WHERE O_W_ID=? AND O_D_ID=? AND O_C_ID=? LIMIT ?')

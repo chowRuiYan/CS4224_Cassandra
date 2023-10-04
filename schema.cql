@@ -1,5 +1,10 @@
 -- create your own tables here
 
+-- xact2&3
+-- potential optimisation: can we do away with orderlines table? t3 only needs aggregation of ol_amount, can sum of ol_amount be stored in orders table instead
+-- potential optimisation: do we need to store both d_ytd in district table and w_ytd in warehouse table? need to check other transactions
+
+
 DROP KEYSPACE IF EXISTS wholesale;
 CREATE KEYSPACE wholesale WITH replication =
   {'class': 'SimpleStrategy', 'replication_factor': 1};
@@ -56,21 +61,98 @@ CREATE TABLE IF NOT EXISTS orders_by_warehouse (
 )
 WITH CLUSTERING ORDER BY (O_W_ID DESC, O_ID DESC);
 
-DROP TABLE IF EXISTS district;
-CREATE TABLE IF NOT EXISTS district (
-  D_W_ID int,
-  D_ID int,
-  D_NEXT_O_ID int,
-  PRIMARY KEY ((D_W_ID, D_ID))
+DROP TABLE IF EXISTS warehouse;
+CREATE TABLE IF NOT EXISTS warehouse (
+  w_id int,
+--  w_name text,
+  w_street_1 text,
+  w_street_2 text,
+  w_city text,
+  w_state text,
+  w_zip text,
+--  w_tax decimal,
+  w_ytd decimal,
+  PRIMARY KEY (W_ID)
 );
 
-DROP TABLE IF EXISTS stocks;
-CREATE TABLE IF NOT EXISTS stocks (
-  S_W_ID int,
-  S_I_ID int,
-  S_QUANTITY decimal,
-  PRIMARY KEY ((S_W_ID, S_I_ID))
+DROP TABLE IF EXISTS district;
+CREATE TABLE IF NOT EXISTS district (
+  d_w_id int,
+  d_id int,
+--  d_name text,
+  d_street_1 text,
+  d_street_2 text,
+  d_city text,
+  d_state text,
+  d_zip text,
+--  d_tax decimal,
+  d_ytd decimal,
+--  d_next_o_id int,
+  PRIMARY KEY (d_w_id, d_id)
+--  FOREIGN KEY (d_w_id) REFERENCES warehouse(w_id)
 );
+
+DROP TABLE IF EXISTS customer_by_wd;
+CREATE TABLE IF NOT EXISTS customer_by_wd (
+  c_w_id int,
+  c_d_id int,
+  c_id int,
+  c_first text,
+  c_middle text,
+  c_last text,
+  c_street_1 text,
+  c_street_2 text,
+  c_city text,
+  c_state text,
+  c_zip text,
+  c_phone text,
+  c_since timestamp,
+  c_credit text,
+  c_credit_lim decimal,
+  c_discount decimal,
+  c_balance decimal,
+  c_ytd_payment float,
+  c_payment_cnt int,
+  c_delivery_cnt int,
+--  c_data text,
+  PRIMARY KEY (c_w_id, c_d_id, c_id)
+--  FOREIGN KEY (c_w_id, c_d_id) REFERENCES district(d_w_id, d_id)
+);
+
+DROP TABLE IF EXISTS order_by_wd;
+CREATE TABLE IF NOT EXISTS order_by_wd (
+  o_w_id int,
+  o_d_id int,
+  o_id int,
+  o_c_id int,
+  o_carrier_id int,
+  ol_delivery_d timestamp, -- from original orderlines table
+--  o_ol_cnt decimal,
+--  o_all_local decimal,
+--  o_entry_d timestamp,
+  PRIMARY KEY (o_w_id, o_d_id, o_id)
+--  FOREIGN KEY (o_w_id, o_d_id, o_c_id) REFERENCES customer_by_wd(c_w_id, c_d_id, c_id),
+--  CHECK (o_carrier_id BETWEEN 1 AND 10)
+);
+
+DROP TABLE IF EXISTS orderline_by_order;
+CREATE TABLE IF NOT EXISTS orderline_by_order (
+  ol_w_id int,
+  ol_d_id int,
+  ol_o_id int,
+--  ol_number int,
+--  ol_i_id int,
+  ol_amount decimal,
+--  ol_supply_w_id int,
+--  ol_quantity decimal,
+--  ol_dist_info text,
+  PRIMARY KEY (ol_w_id, ol_d_id, ol_o_id, ol_number)
+--  FOREIGN KEY (ol_w_id, ol_d_id, ol_o_id) REFERENCES order_by_wd(o_w_id, o_d_id, o_id)
+--  FOREIGN KEY (ol_i_id) REFERENCES item(i_id)
+-- Note: An order-line is classified as a home order-line if OL SUPPLY W ID = OL W ID; otherwise, it it classified as a remote order-line. An order’s O ALL LOCAL is set to true if and only if all its order-lines are home order-lines.
+);
+
+
 
 -- DROP TABLE IF EXISTS warehouses;
 -- CREATE TABLE IF NOT EXISTS warehouses (

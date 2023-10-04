@@ -12,3 +12,5 @@ stock_item_update_prepared = session.prepare('UPDATE stock_by_items SET s_quanti
 
 get_next_available_order_number = session.prepare('SELECT D_NEXT_O_ID FROM xact_six_districts WHERE D_W_ID=? AND D_ID=?')
 get_last_L_orders = session.prepare('SELECT O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST, O_ITEM_QTY FROM xact_six_order_by_warehouse WHERE O_W_ID=? AND O_D_ID=? LIMIT ?')
+
+get_top_10_customers_by_balance = session.prepare('SELECT * FROM xact_seven LIMIT 10')

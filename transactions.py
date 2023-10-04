@@ -6,6 +6,7 @@ from connection import stock_item_info_prepared
 from connection import stock_item_update_prepared
 from connection import get_next_available_order_number
 from connection import get_last_L_orders
+from connection import get_top_10_customers_by_balance
 from datetime import datetime
 
 def new_order_transaction(c_id, w_id, d_id, num_items, item_numbers, supplier_warehouses, quantities):
@@ -105,11 +106,17 @@ def popular_item_transaction(w_id, d_id, L):
     for item in popularSet:
         percentage = (itemMap[item] / L) * 100
         print(f"Item: {item}, Percentage: {percentage}")
-    return
 
 
 def top_balance_transaction():
-    return
+    top10 = session.execute(get_top_10_customers_by_balance)
+    
+    for cust in top10:
+        c_w_id, c_d_id, c_balance, c_id, c_first, c_middle, c_last, d_name, w_name = cust
+        print(f"Customer Name: ({c_first}, {c_middle}, {c_last})")
+        print(f"Balance: {c_balance}")
+        print(f"Warehouse: {w_name}")
+        print(f"District: {d_name}")
 
 
 def related_customer_transaction(c_w_id, c_d_id, c_id):

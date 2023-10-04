@@ -7,6 +7,8 @@ from connection import stock_item_update_prepared
 from connection import get_next_available_order_number
 from connection import get_last_L_orders
 from connection import get_top_10_customers_by_balance
+from connection import get_customers_orders_items_t8
+from connection import get_all_other_customers_t8
 from datetime import datetime
 
 def new_order_transaction(c_id, w_id, d_id, num_items, item_numbers, supplier_warehouses, quantities):
@@ -120,6 +122,41 @@ def top_balance_transaction():
 
 
 def related_customer_transaction(c_w_id, c_d_id, c_id):
-    return
+    # Get orders from customer in list<list<ITEM_QTY>>. Each element in the outer list represents one order
+    # Each element in the inner list represents an item in that order
+    customerOrderItemLists = session.execute(get_customers_orders_items_t8, [c_w_id, c_d_id, c_id])
 
+    # Convert above into list<list<I_NAME>>
+    customerOrderItemNames = [[item['I_NAME'] for item in order] for order in customerOrderItemLists]
+    
+    # Get all other customers from other warehouse and district 
+    otherCustomersOrders = session.execute(get_all_other_customers_t8, [c_w_id, c_d_id])
+    
+    # To prevent duplicate results
+    relatedCustomerSet = set()
+    
+    for otherOrder in otherCustomersOrders:
+        o_w_id, o_d_id, o_c_id, o_id, o_item_qty = otherOrder
+        
+        custIdTuple = (o_w_id, o_d_id, o_c_id)
+        if custIdTuple in relatedCustomerSet:
+            continue
+        
+        found = False
+        for custOrder in customerOrderItemNames:
+            sameItemCount = 0
+            # For each order
+            for item in o_item_qty:
+                if (item['I_NAME'] in custOrder):
+                    sameItemCount += 1
+                    if (sameItemCount == 2):
+                        print(f"Customer: {o_w_id}, {o_d_id}, {o_c_id}")
+                        relatedCustomerSet.add(custIdTuple)
+                        found = True
+                if found:
+                    break
+            if found:
+                break    
+                    
+            
 

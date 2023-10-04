@@ -4,6 +4,8 @@ from connection import session
 from connection import new_order_prepared
 from connection import stock_item_info_prepared
 from connection import stock_item_update_prepared
+from connection import get_next_available_order_number
+from connection import get_last_L_orders
 from datetime import datetime
 
 def new_order_transaction(c_id, w_id, d_id, num_items, item_numbers, supplier_warehouses, quantities):
@@ -36,23 +38,81 @@ def new_order_transaction(c_id, w_id, d_id, num_items, item_numbers, supplier_wa
         
 
 def payment_transaction(c_w_id, c_d_id, c_id, payment):
+    return
 
 
 def delivery_transaction(w_id, carrier_id):
+    return
 
 
 def order_status_transaction(c_w_id, c_d_id, c_id):
+    return
 
 
 def stock_level_transaction(w_id, d_id, T, L):
+    return
 
 
 def popular_item_transaction(w_id, d_id, L):
+    print(f"District identifier ({w_id}, {d_id})")
+    print(f"Number of last orders to be examined {L}")
+    # Get next order id
+    d_next_o_id = session.execute(get_next_available_order_number, [w_id, d_id])
+    # Get last L orders
+    L_orders = session.execute(get_last_L_orders, [w_id, d_id, L])
+    
+    # Stores distinct popular items
+    popularSet = set()
+    
+    # Map to get total order count for each item
+    itemMap = {}
+
+    # Find popular items for each order
+    for order in L_orders:
+        o_id, o_entry_d, c_first, c_middle, c_last, o_item_qty = order
+        print(f"Order number: {o_id}, Entry Data and Time: {o_entry_d}")
+        print(f"Customer Name: ({c_first}, {c_middle}, {c_last})")
+        # Find most popular item in O
+        popular_qty = 0
+        # Used to get popular items from an order
+        popularList = []
+        for item in o_item_qty:
+            i_name = item['I_NAME']
+            ol_quantity = item['OL_QUANTITY']
+            
+            if i_name not in itemMap.keys():
+                itemMap[i_name] = 1
+            else:
+                itemMap[i_name] += 1
+            
+            if ol_quantity > popular_qty:
+                # Found new largest amount
+                popular_qty = ol_quantity
+                popularList.clear()
+                popularList.append((i_name, popular_qty))
+            elif ol_quantity == popular_qty:
+                # There can be multiple items with the same quantity
+                popularList.append((i_name, popular_qty))
+            else:
+                pass
+        
+        for i in popularList:
+            # Add item name to set
+            popularSet.add(i[0])
+            print(f"Item name {i[0]}, quantity ordered {i[1]}")
+        
+    # Find percentage that contain each popular item
+    for item in popularSet:
+        percentage = (itemMap[item] / L) * 100
+        print(f"Item: {item}, Percentage: {percentage}")
+    return
 
 
 def top_balance_transaction():
+    return
 
 
 def related_customer_transaction(c_w_id, c_d_id, c_id):
+    return
 
 

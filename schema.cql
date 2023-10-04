@@ -187,7 +187,8 @@ CREATE TABLE IF NOT EXISTS xact_six_order_by_warehouse (
    C_MIDDLE text,
    C_LAST text,
    PRIMARY KEY ((O_W_ID, O_D_ID), O_ID, O_C_ID)
-);
+)
+WITH CLUSTERING ORDER BY (O_ID DESC, O_C_ID ASC);
 
 DROP TABLE IF EXISTS xact_seven;
 CREATE TABLE IF NOT EXISTS xact_seven (

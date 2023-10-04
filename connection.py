@@ -17,10 +17,12 @@ get_last_L_orders = session.prepare('SELECT O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, 
 
 ## xact7
 # Construct xact_seven table
-
 # WIP: EXTREMELY BRUTE FORCE METHOD TO TEST
+
+# Prepare get d_name and w_name queries
 get_d_name = session.prepare('SELECT D_NAME FROM districts WHERE D_ID=?')
 get_w_name = session.prepare('SELECT W_NAME FROM warehouse WHERE W_ID=?')
+
 # Get all customer in a resultSet of namedTuple 
 custs = session.execute('SELECT C_W_ID, C_D_ID, C_BALANCE, C_ID, C_FIRST, C_MIDDLE, C_LAST FROM customers')
 for cust in custs:

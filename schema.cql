@@ -20,6 +20,72 @@ CREATE TABLE IF NOT EXISTS new_order_by_wd (
   PRIMARY KEY ((w_id, d_id), c_id)
 )
 
+CREATE TYPE orders_by_customers.order_items (
+  OL_NUMBER int,
+  OL_I_ID int,
+  OL_AMOUNT decimal,
+  OL_SUPPLY_W_ID int,
+  OL_QUANTITY decimal,
+)
+
+DROP TABLE IF EXISTS orders_by_customers;
+CREATE TABLE IF NOT EXISTS orders_by_customers (
+  O_W_ID int,
+  O_D_ID int,
+  O_ID int,
+  O_C_ID int,
+  O_C_FIRST text,
+  O_C_MIDDLE text,
+  O_C_LAST text,
+  O_C_BALANCE decimal,
+  O_CARRIER_ID int,
+  O_ENTRY_D timestamp,
+  OL_DELIVERY_D timestamp,
+  ORDER_ITEMS list<frozen<order_items>>,
+  PRIMARY KEY ((O_W_ID, O_D_ID, O_ID))
+)
+WITH CLUSTERING ORDER BY (O_C_ID ASC, O_ID DESC);
+
+DROP TABLE IF EXISTS orders_by_warehouse;
+CREATE TABLE IF NOT EXISTS orders_by_warehouse (
+  O_W_ID int,
+  O_D_ID int,
+  O_ID int,
+  ORDER_ITEMS list<frozen<order_items>>,
+  PRIMARY KEY ((O_W_ID, O_D_ID, O_ID))
+)
+WITH CLUSTERING ORDER BY (O_W_ID DESC, O_ID DESC);
+
+DROP TABLE IF EXISTS district;
+CREATE TABLE IF NOT EXISTS district (
+  D_W_ID int,
+  D_ID int,
+  D_NEXT_O_ID int,
+  PRIMARY KEY ((D_W_ID, D_ID))
+);
+
+DROP TABLE IF EXISTS stocks;
+CREATE TABLE IF NOT EXISTS stocks (
+  S_W_ID int,
+  S_I_ID int,
+  S_QUANTITY decimal,
+  PRIMARY KEY ((S_W_ID, S_I_ID))
+);
+
+-- DROP TABLE IF EXISTS warehouses;
+-- CREATE TABLE IF NOT EXISTS warehouses (
+--   W_ID int,
+--   W_NAME text,
+--   W_STREET_1 text,
+--   W_STREET_2 text,
+--   W_CITY text,
+--   W_STATE text,
+--   W_ZIP text,
+--   W_TAX decimal,
+--   W_YTD decimal,
+--   PRIMARY KEY (W_ID)
+-- );
+
 DROP TABLE IF EXISTS stock_by_items;
 CREATE TABLE IF NOT EXISTS stock_by_items (
   i_id int,

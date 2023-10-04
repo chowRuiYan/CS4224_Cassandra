@@ -1,4 +1,4 @@
-## Specific how to connect to a running Cassandra database
+# Specific how to connect to a running Cassandra database
 
 from cassandra.cluster import Cluster
 from datetime import datetime
@@ -6,9 +6,24 @@ from datetime import datetime
 cluster = Cluster()
 session = cluster.connect("wholesale")
 
+# xact 1
 new_order_prepared = session.prepare('SELECT * FROM new_order_by_wd WHERE w_id=? AND d_id=? AND c_id=?')
 stock_item_info_prepared = session.prepare('SELECT * FROM stock_by_items WHERE i_id=? and w_id=?')
 stock_item_update_prepared = session.prepare('UPDATE stock_by_items SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? WHERE i_id=? AND w_id=?')
+
+# xact 4
+get_customer_last_order_prepared = session.prepare(
+    'SELECT * FROM orders_by_customers WHERE O_W_ID=? AND O_D_ID=? AND O_C_ID=? LIMIT ?')
+
+# xact 5
+get_next_available_order_number_prepared = session.prepare(
+    'SELECT D_NEXT_O_ID FROM district WHERE D_W_ID=? AND D_ID=?')
+
+get_last_L_orders_prepared = session.prepare(
+    'SELECT ORDER_ITEMS FROM orders_by_warehouse WHERE O_W_ID=? AND O_D_ID=? AND O_ID>=? AND O_ID<?')
+
+get_stock_quantity_prepared = session.prepare(
+    'SELECT S_QUANTITY FROM stock WHERE S_W_ID=? AND S_I_ID=?')
 
 ## xact6
 get_next_available_order_number = session.prepare('SELECT D_NEXT_O_ID FROM districts WHERE D_W_ID=? AND D_ID=?')
@@ -37,3 +52,4 @@ get_top_10_customers_by_balance = session.prepare('SELECT * FROM xact_seven LIMI
 ## xact8
 get_customers_orders_items_t8 = session.prepare('SELECT O_ITEM_QTY FROM order_by_customer_t8 WHERE O_W_ID=? AND O_D_ID=? AND O_C_ID=?')
 get_all_other_customers_t8 = session.prepare('SELECT * FROM order_by_customer_t8 WHERE O_W_ID!=? AND O_D_ID!=?')
+

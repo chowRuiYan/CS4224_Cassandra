@@ -1,4 +1,4 @@
-## Write your transactions here
+# Write your transactions here
 
 from connection import session
 from connection import new_order_prepared
@@ -49,11 +49,34 @@ def delivery_transaction(w_id, carrier_id):
 
 
 def order_status_transaction(c_w_id, c_d_id, c_id):
-    return
+    o_w_id, o_d_id, o_id, o_c_id, o_c_first, o_c_middle, o_c_last, o_c_balance, o_carrier_id, o_entry_d, ol_delivery_d, order_items = session.execute(
+        get_customer_last_order_prepared, [c_w_id, c_d_id, c_id, 1])
+
+    print(
+        f"CUSTOMER: {o_c_first} {o_c_middle} {o_c_last}, BALANCE: {o_c_balance}")
+    print(f"CUSTOMER LAST ORDER: {o_id} {o_entry_d} {o_carrier_id}")
+
+    for item in order_items:
+        ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_delivery_d = item
+        print(f"{ol_i_id} {ol_supply_w_id} {ol_quantity} {ol_amount} {ol_delivery_d}")
 
 
 def stock_level_transaction(w_id, d_id, T, L):
-    return
+    N = session.execute(get_next_available_order_number_prepared, [w_id, d_id])
+
+    S = session.execute(get_last_L_orders_prepared, [w_id, d_id, N-L, N])
+
+    allItems = S.ORDER_ITEMS
+    allItemsID = [item.OL_I_ID for item in allItems]
+    count = 0
+
+    for itemID in allItemsID:
+        quantity = session.execute(get_stock_quantity_prepared, [w_id, itemID])
+
+        if (quantity < T):
+            count += 1
+
+    print(f"{count}")
 
 
 def popular_item_transaction(w_id, d_id, L):
@@ -156,7 +179,4 @@ def related_customer_transaction(c_w_id, c_d_id, c_id):
                 if found:
                     break
             if found:
-                break    
-                    
-            
-
+                break  

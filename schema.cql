@@ -151,9 +151,42 @@ CREATE TABLE IF NOT EXISTS stock_by_items (
 -- );
 	
 -- create xact 6-8 tables
-DROP TABLE IF EXISTS xact_six;
-CREATE TABLE IF NOT EXISTS xact_six (
--- WIP
+DROP TABLE IF EXISTS xact_six_districts;
+CREATE TABLE IF NOT EXISTS xact_six_districts (
+   D_W_ID int,
+   D_ID int,
+   D_NAME text,
+   D_STREET_1 text,
+   D_STREET_2 text,
+   D_CITY text,
+   D_STATE text,
+   D_ZIP text,
+   D_TAX decimal,
+   D_YTD decimal,
+   D_NEXT_O_ID int,
+   PRIMARY KEY ((D_W_ID), D_ID)
+);
+
+CREATE TYPE order.item_qty (
+  I_NAME text,
+  OL_QUANTITY decimal
+);
+
+DROP TABLE IF EXISTS xact_six_order_by_warehouse;
+CREATE TABLE IF NOT EXISTS xact_six_order_by_warehouse (
+   O_W_ID int,
+   O_D_ID int,
+   O_ID int,
+   O_C_ID int,
+   O_CARRIER_ID int,
+   O_OL_CNT decimal,
+   O_ALL_LOCAL decimal,
+   O_ENTRY_D timestamp,
+   O_ITEM_QTY list<frozen<item_qty>>,
+   C_FIRST text,
+   C_MIDDLE text,
+   C_LAST text,
+   PRIMARY KEY ((O_W_ID, O_D_ID), O_ID, O_C_ID)
 );
 
 DROP TABLE IF EXISTS xact_seven;
@@ -167,8 +200,9 @@ CREATE TABLE IF NOT EXISTS xact_seven (
   C_LAST VARCHAR(16)
   D_NAME VARCHAR(10)
   W_NAME VARCHAR(10)
-  PRIMARY KEY ((C_W_ID, C_D_ID, C_ID))
-);
+  PRIMARY KEY ((C_W_ID, C_D_ID), C_BALANCE, C_ID)
+)
+WITH CLUSTERING ORDER BY (C_BALANCE DESC, C_ID ASC);
 
 DROP TABLE IF EXISTS xact_eight;
 CREATE TABLE IF NOT EXISTS xact_eight (
@@ -183,5 +217,5 @@ CREATE TABLE IF NOT EXISTS xact_eight (
   OL_SUPPLY_W_ID int
   OL_QUANTITY int
   OL_DIST_INFO CHAR(24)
-  PRIMARY KEY ((OL_C_ID, OL_W_ID, OL_D_ID, OL_O_ID))
+  PRIMARY KEY ((OL_C_ID, OL_W_ID, OL_D_ID, OL_O_ID), OL_NUMBER)
 );

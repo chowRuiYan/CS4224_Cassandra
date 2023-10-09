@@ -8,7 +8,12 @@ from connection import get_next_available_order_number
 from connection import get_last_L_orders
 from connection import get_top_10_customers_by_balance
 from connection import get_customers_orders_items_t8
+from connection import get_customer_last_order_prepared
 from connection import get_all_other_customers_t8
+from connection import get_next_available_order_number_prepared
+from connection import get_last_L_orders_prepared
+from connection import get_stock_quantity_prepared
+
 from datetime import datetime
 
 def new_order_transaction(c_id, w_id, d_id, num_items, item_numbers, supplier_warehouses, quantities):

@@ -52,4 +52,3 @@ get_top_10_customers_by_balance = session.prepare('SELECT * FROM xact_seven LIMI
 ## xact8
 get_customers_orders_items_t8 = session.prepare('SELECT O_ITEM_QTY FROM order_by_customer_t8 WHERE O_W_ID=? AND O_D_ID=? AND O_C_ID=?')
 get_all_other_customers_t8 = session.prepare('SELECT * FROM order_by_customer_t8 WHERE O_W_ID!=? AND O_D_ID!=?')
-

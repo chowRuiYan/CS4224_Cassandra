@@ -27,8 +27,29 @@ def execute(path):
             try:
                 match xactType:
                     case "N":
-                        # 
-                        print('N')
+                        # New Order Xact
+                        new_order_transaction()
+                    case "P":
+                        # Payment Xact
+                        payment_transaction()
+                    case "D":
+                        # Delivery Xact
+                        delivery_transaction()
+                    case "O":
+                        # Order-status Xact
+                        order_status_transaction()
+                    case "S":
+                        # Stock-Level Xact
+                        stock_level_transaction()
+                    case "I":
+                        # Popular-Item Xact
+                        popular_item_transaction()
+                    case "T":
+                        # Top-Balance Xact
+                        top_balance_transaction()
+                    case "R":
+                        # Related-Customer Xact
+                        related_customer_transaction()
                     case _:
                         # Invalid
                         print('Invalid Xact Type')
@@ -57,8 +78,6 @@ if __name__ == "__main__":
     ninetyFifthPercentileXactLat = sortedXactTimes[int(numOfXacts * 0.95)] * 1000
     ninetyNinthPercentileXactLat = sortedXactTimes[int(numOfXacts * 0.99)] * 1000
     
-    with open(f'results/{client}.csv', 'w') as f:
-        file_writer = csv.writer(f)
-        file_writer.writerow([client, numOfXacts, totalXactExecutionTime, xactThroughput, avgXactLat, \
-                              medianXactLat, ninetyFifthPercentileXactLat, ninetyNinthPercentileXactLat
-                            ])
+    sys.stderr.write(client, numOfXacts, totalXactExecutionTime, xactThroughput, avgXactLat, \
+          medianXactLat, ninetyFifthPercentileXactLat, ninetyNinthPercentileXactLat
+          )

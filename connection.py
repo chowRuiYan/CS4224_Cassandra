@@ -4,7 +4,8 @@ from cassandra.cluster import Cluster
 from datetime import datetime
 
 cluster = Cluster()
-session = cluster.connect("wholesale")
+session = cluster.connect()
+session.execute("USE cs4224_keyspace")
 
 # xact 1
 new_order_prepared = session.prepare('SELECT * FROM new_order_by_wd WHERE w_id=? AND d_id=? AND c_id=?')

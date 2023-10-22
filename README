@@ -1,0 +1,17 @@
+## Using Cassandra with Docker
+
+# Pull Docker Image
+docker pull cassandra:latest
+
+# Cassandra with docker run command or via docker GUI
+docker run --name cass_cluster cassandra:latest
+
+# Start CQL shell
+docker exec -it cass_cluster cqlsh
+
+# To load schema and tables
+SOURCE '/home/CS4224_Cassandra/schema.cql'
+SOURCE '/home/CS4224_Cassandra/load_table.cql'
+
+# To check tables
+DESCRIBE TABLES; or DESCRIBE <table name>;

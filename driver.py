@@ -4,6 +4,7 @@ from create_db_tables import KEYSPACES, IP_ADDRESSES
 from cassandra.cqlengine import connection
 from transactions import *
 
+import decimal
 import csv
 import time
 import sys
@@ -28,7 +29,17 @@ def execute(path):
                 match xactType:
                     case "N":
                         # New Order Xact
-                        new_order_transaction()
+                        c_id, w_id, d_id, num = input[1:]
+                        num_items = int(num)
+                        item_numbers = []
+                        supplier_warehouses = []
+                        quantities = []
+                        for i in range(num_items):
+                            item_number, supplier_warehouse, quantity = f.readline().strip().split(',')
+                            item_numbers.append(int(item_number))
+                            supplier_warehouses.append(int(supplier_warehouse))
+                            quantities.append(decimal.Decimal(quantity))
+                        new_order_transaction(int(c_id), int(w_id), int(d_id), num_items, item_numbers, supplier_warehouses, quantities)
                     case "P":
                         # Payment Xact
                         payment_transaction()

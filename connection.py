@@ -1,4 +1,5 @@
 # Specific how to connect to a running Cassandra database
+# Prepares Xacts
 
 from cassandra.cluster import Cluster
 from datetime import datetime

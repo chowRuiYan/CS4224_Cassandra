@@ -5,7 +5,7 @@
 -- potential optimisation: do we need to store both d_ytd in district table and w_ytd in warehouse table? need to check other transactions
 
 -- Access cs4224_keyspace
-CREATE  KEYSPACE IF NOT EXISTS cs4224_keyspace 
+CREATE KEYSPACE IF NOT EXISTS cs4224_keyspace 
     WITH REPLICATION = { 
         'class' : 'SimpleStrategy',
         'replication_factor' : 1 

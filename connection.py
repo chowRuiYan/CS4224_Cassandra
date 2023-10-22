@@ -3,7 +3,8 @@
 from cassandra.cluster import Cluster
 from datetime import datetime
 
-cluster = Cluster()
+hosts = [('172.17.0.2', 7000)]
+cluster = Cluster(hosts)
 session = cluster.connect()
 session.execute("USE cs4224_keyspace")
 

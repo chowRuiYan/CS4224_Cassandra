@@ -81,8 +81,6 @@ def execute(path):
 
 # main     
 if __name__ == "__main__":
-    # connection.setup(IP_ADDRESSES, KEYSPACES[0])
-    # test = sys.argv[1]
     client = sys.argv[1]
         
     execute(f'project_files/xact_files/{client}.txt')
@@ -100,6 +98,7 @@ if __name__ == "__main__":
     
     with open(f'{client}.csv', 'w') as f:
         file_writer = csv.writer(f)
-        file_writer.writerow([client, numOfXacts, totalXactExecutionTime, xactThroughput, avgXactLat, \
-                              medianXactLat, ninetyFifthPercentileXactLat, ninetyNinthPercentileXactLat
-                            ])
+        file_writer.writerow([
+            client, numOfXacts, totalXactExecutionTime, xactThroughput, avgXactLat, \
+            medianXactLat, ninetyFifthPercentileXactLat, ninetyNinthPercentileXactLat
+        ])

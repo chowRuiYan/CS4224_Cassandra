@@ -1,69 +1,84 @@
 # Specific how to connect to a running Cassandra database
 
 from cassandra.cluster import Cluster
-from datetime import datetime
 
 cluster = Cluster()
-session = cluster.connect("wholesale")
+session = cluster.connect("cs4224_keyspace")
 
-# xact 1
-new_order_prepared = session.prepare('SELECT * FROM new_order_by_wd WHERE w_id=? AND d_id=? AND c_id=?')
-stock_item_info_prepared = session.prepare('SELECT * FROM stock_by_items WHERE i_id=? and w_id=?')
-stock_item_update_prepared = session.prepare('UPDATE stock_by_items SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? WHERE i_id=? AND w_id=?')
+class Orderline(object):
+    
+    def __init__(self, ol_number, i_id, i_name, ol_amount, ol_supply_w_id, ol_quantity):
+        self.ol_number = ol_number
+        self.i_id = i_id
+        self.i_name = i_name
+        self.ol_amount = ol_amount
+        self.ol_supply_w_id = ol_supply_w_id
+        self.ol_quantity = ol_quantity
 
-# xact 2
-payment_warehouse_select = session.prepare('SELECT * FROM warehouse WHERE w_id=?')
-payment_warehouse_update = session.prepare('UPDATE warehouse SET w_ytd=w_ytd+? WHERE w_id=?')
-payment_district_select = session.prepare('SELECT * FROM district WHERE d_w_id=? AND d_id=?')
-payment_district_update = session.prepare('UPDATE district SET d_ytd=d_ytd+? WHERE d_w_id=? AND d_id=?')
-payment_customer_by_wd_select = session.prepare('SELECT * FROM customer_by_wd WHERE c_w_id=? AND c_d_id=? AND c_id=?')
-payment_customer_by_wd_update = session.prepare('UPDATE customer_by_wd SET c_balance=c_balance-?, c_ytd_payment=c_ytd_payment+?, c_payment_cnt=c_payment_cnt+1 WHERE c_w_id=? AND c_d_id=? AND c_id=?')
+cluster.register_user_type('cs4224_keyspace', 'orderline', Orderline)
 
-# xact 3
-delivery_order_by_wd_select_min = session.prepare('SELECT MIN(o_id) FROM order_by_wd WHERE o_w_id=? AND o_d_id=? AND o_carrier_id IS NULL')
-delivery_order_by_wd_select_cust = session.prepare('SELECT o_c_id FROM order_by_wd WHERE o_w_id=? AND o_d_id=? AND o_id=?')
-delivery_orderline_by_order_select = session.prepare('SELECT SUM(ol_amount) FROM orderline_by_order WHERE ol_w_id=? AND ol_d_id=? AND ol_o_id=?')
-delivery_order_by_wd_update = session.prepare('UPDATE order_by_wd SET o_carrier_id=? AND ol_delivery_d=? WHERE o_w_id=? AND o_d_id=? AND o_id=?')
-delivery_customer_by_wd_update = session.prepare('UPDATE customer_by_wd SET c_balance=c_balance+? AND c_delivery_cnt=c_delivery_cnt+1 WHERE c_w_id=? AND c_d_id=? AND c_id=?')
+new_order_select = session.prepare(
+    'SELECT * FROM info_for_new_order WHERE w_id=? AND d_id=? AND c_id=?')
 
-# xact 4
-get_customer_last_order_prepared = session.prepare(
-    'SELECT * FROM orders_by_customers WHERE O_W_ID=? AND O_D_ID=? AND O_C_ID=? LIMIT ?')
+new_order_update = session.prepare(
+    'UPDATE info_for_new_order SET next_o_id=? WHERE w_id=? AND d_id=?')
 
-# xact 5
-get_next_available_order_number_prepared = session.prepare(
-    'SELECT D_NEXT_O_ID FROM district WHERE D_W_ID=? AND D_ID=?')
+stock_by_item_select = session.prepare(
+    'SELECT * FROM stock_by_item WHERE i_id=? and w_id=?')
 
-get_last_L_orders_prepared = session.prepare(
-    'SELECT ORDER_ITEMS FROM orders_by_warehouse WHERE O_W_ID=? AND O_D_ID=? AND O_ID>=? AND O_ID<?')
+stock_by_item_update = session.prepare(
+    'UPDATE stock_by_item SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? WHERE i_id=? AND w_id=?')
 
-get_stock_quantity_prepared = session.prepare(
-    'SELECT S_QUANTITY FROM stock WHERE S_W_ID=? AND S_I_ID=?')
+order_by_wd_insert = session.prepare(
+    'INSERT INTO order_by_wd (w_id, d_id, o_id, c_id, o_amount, o_ol_cnt, orderlines, o_carrier_id) VALUES (?, ?, ?, ?, ?, ?, ?, -1)')
 
-## xact6
-get_next_available_order_number = session.prepare('SELECT D_NEXT_O_ID FROM districts WHERE D_W_ID=? AND D_ID=?')
+order_by_customer_insert = session.prepare(
+    'INSERT INTO order_by_customer (w_id, d_id, c_id, o_id, o_entry_d, orderlines, o_i_id_list, o_carrier_id) VALUES (?, ?, ?, ?, ?, ?, ?, -1)')
 
-get_last_L_orders = session.prepare('SELECT O_ID, O_ENTRY_D, C_FIRST, C_MIDDLE, C_LAST, O_ITEM_QTY FROM xact_six_order_by_warehouse WHERE O_W_ID=? AND O_D_ID=? LIMIT ?')
+warehouse_select = session.prepare(
+    'SELECT * FROM warehouse WHERE w_id=?')
 
-## xact7
-# Construct xact_seven table
-# WIP: EXTREMELY BRUTE FORCE METHOD TO TEST
+warehouse_update = session.prepare(
+    'UPDATE warehouse SET w_ytd=? WHERE w_id=?')
 
-# Prepare get d_name and w_name queries
-get_d_name = session.prepare('SELECT D_NAME FROM districts WHERE D_ID=?')
-get_w_name = session.prepare('SELECT W_NAME FROM warehouse WHERE W_ID=?')
+district_select = session.prepare(
+    'SELECT * FROM district WHERE w_id=? AND d_id=?')
 
-# Get all customer in a resultSet of namedTuple 
-custs = session.execute('SELECT C_W_ID, C_D_ID, C_BALANCE, C_ID, C_FIRST, C_MIDDLE, C_LAST FROM customers')
-for cust in custs:
-    d_name = session.execute(get_d_name, [cust.C_D_ID])
-    w_name = session.execute(get_w_name, [cust.C_W_ID])
-    session.execute("INSERT INTO xact_seven (C_W_ID, C_D_ID, C_BALANCE, C_ID, C_FIRST, C_MIDDLE, C_LAST, D_NAME, W_NAME,) VALUES (%s)", \
-                    [cust.C_W_ID, cust.C_D_ID, cust.C_BALANCE, cust.C_ID, cust.C_FIRST, cust.C_MIDDLE, cust.C_LAST, d_name, w_name])
+district_update = session.prepare(
+    'UPDATE district SET d_ytd=? WHERE w_id=? AND d_id=?')
 
-# Final output
-get_top_10_customers_by_balance = session.prepare('SELECT * FROM xact_seven LIMIT 10')
+customer_by_wd_select = session.prepare(
+    'SELECT * FROM customer_by_wd WHERE w_id=? AND d_id=? AND c_id=?')
 
-## xact8
-get_customers_orders_items_t8 = session.prepare('SELECT O_ITEM_QTY FROM order_by_customer_t8 WHERE O_W_ID=? AND O_D_ID=? AND O_C_ID=?')
-get_all_other_customers_t8 = session.prepare('SELECT * FROM order_by_customer_t8 WHERE O_W_ID!=? AND O_D_ID!=?')
+payment_customer_by_wd_update = session.prepare(
+    'UPDATE customer_by_wd SET c_balance=?, c_ytd_payment=?, c_payment_cnt=? WHERE w_id=? AND d_id=? AND c_id=?')
+
+order_by_wd_select_min = session.prepare(
+    'SELECT * FROM order_by_wd WHERE w_id=? AND d_id=? AND o_carrier_id=-1 LIMIT 1 ALLOW FILTERING')
+
+delivery_order_by_wd_update = session.prepare(
+    'UPDATE order_by_wd SET o_carrier_id=? WHERE w_id=? AND d_id=? AND o_id=?')
+
+delivery_order_by_customer_update = session.prepare(
+    'UPDATE order_by_customer SET o_carrier_id=?, o_delivery_d=? WHERE w_id=? AND d_id=? AND c_id=? AND o_id=?')
+
+delivery_customer_by_wd_update = session.prepare(
+    'UPDATE customer_by_wd SET c_balance=?, c_delivery_cnt=? WHERE w_id=? AND d_id=? AND c_id=?')
+
+order_by_customer_select = session.prepare(
+    'SELECT * FROM order_by_customer WHERE w_id=? AND d_id=? AND c_id=? LIMIT 1')
+
+last_L_orders_select = session.prepare(
+    'SELECT * FROM order_by_oid WHERE w_id=? AND d_id=? LIMIT ?')
+
+stock_by_item_select_quantity = session.prepare(
+    'SELECT s_quantity FROM stock_by_item WHERE i_id=? AND w_id=?')
+
+top_10_customers_in_each_partition_select = session.prepare(
+    'SELECT * FROM customer_by_balance PER PARTITION LIMIT 10')
+
+order_by_customer_select_i_id_list = session.prepare(
+    'SELECT o_i_id_list FROM order_by_customer WHERE w_id=? and d_id=? AND c_id=?')
+
+customer_by_wd_select_all = session.prepare(
+    'SELECT * FROM customer_by_wd')

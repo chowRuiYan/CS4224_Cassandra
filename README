@@ -1,5 +1,4 @@
 ## Using Cassandra with Docker
-
 # Pull Docker Image
 docker pull cassandra:latest
 
@@ -8,6 +7,19 @@ docker run --name cass_cluster cassandra:latest
 
 # Start CQL shell
 docker exec -it cass_cluster cqlsh
+
+# To import code into cluster
+1. Enter Docker GUI 
+2. Check your container -> go to files
+3. Import files
+
+# To run python scripts
+1. Enter Docker GUI
+2. Check your container -> go to exec
+
+## Running the Code
+# Preprocess data
+python3 preprocess_data.py
 
 # To load schema and tables
 SOURCE '/home/CS4224_Cassandra/schema.cql'

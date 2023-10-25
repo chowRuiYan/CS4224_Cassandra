@@ -65,9 +65,9 @@ def payment_transaction(c_w_id, c_d_id, c_id, payment):
     d_w_id, d_id, d_street_1, d_street_2, d_city, d_state, d_zip, d_ytd = session.execute(payment_district_select, [c_w_id, c_d_id])
     c_w_id, c_d_id, c_id, c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_lim, c_discount, c_balance, c_ytd_payment, c_payment_cnt, c_delivery_cnt = session.execute(payment_customer_by_wd_select, [c_w_id, c_d_id, c_id])
     
-    session.execute(payment_warehouse_update, [payment, c_w_id])
-    session.execute(payment_district_update, [payment, c_w_id, c_d_id])
-    session.execute(payment_customer_by_wd_update, [payment, payment, c_w_id, c_d_id, c_id])
+    session.execute(payment_warehouse_update, [w_ytd+payment, c_w_id])
+    session.execute(payment_district_update, [d_ytd+payment, c_w_id, c_d_id])
+    session.execute(payment_customer_by_wd_update, [c_balance-payment, c_ytd_payment+payment, c_payment_cnt+1, c_w_id, c_d_id, c_id])
 
     print(f"Customer Identifier: {c_w_id}, {c_d_id}, {c_id}\nName: {c_first}, {c_middle}, {c_last}")
     print(f"Address: {c_street_1}, {c_street_2}, {c_city}, {c_state}, {c_zip}")

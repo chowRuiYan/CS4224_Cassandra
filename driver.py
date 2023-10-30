@@ -38,13 +38,13 @@ def execute(path):
             try:
                 if xactType == "N":
                     # New Order Xact
-                    c_id, w_id, d_id, num = input[1:]
+                    c_id, w_id, d_id, num = splitLine[1:]
                     num_items = int(num)
                     item_numbers = []
                     supplier_warehouses = []
                     quantities = []
                     for i in range(num_items):
-                        item_number, supplier_warehouse, quantity = f.readline().strip().split(',')
+                        item_number, supplier_warehouse, quantity = file.readline().strip().split(',')
                         item_numbers.append(int(item_number))
                         supplier_warehouses.append(int(supplier_warehouse))
                         quantities.append(decimal.Decimal(quantity))

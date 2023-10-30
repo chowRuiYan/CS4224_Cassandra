@@ -3,8 +3,8 @@
 2. Run schema.cql
 3. Run load_table.cql
 4. Run driver.py <xact_files number> to test xacts
+Repeat for xact 0 to 19
+5. Run process_output.py 
 
 Errors:
 - 0.txt:
-I,1,5,39 -> 'Row' object has no attribute 'o_c_id'
-S,1,4,12,50 -> 'Row' object has no attribute 'ORDERLINES'

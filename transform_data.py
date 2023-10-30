@@ -21,7 +21,7 @@ order_by_customer = f'{path}order_by_customer.csv'   # t4
 
 t1_required_columns = [0,1,2,5,15,13]
 t2_required_columns = [1,0,2,3,4,5]
-t3_required_columns = [0,1,2,3,4,5]
+t3_required_columns = [0,1,2,3,7,4,5]
 t4_required_columns = [0,1,3,2,7,4]
 
 with open(district, 'r', newline='') as district_csv, open(district1, 'w', newline='') as district1_csv:

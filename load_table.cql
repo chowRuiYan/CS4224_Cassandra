@@ -9,7 +9,7 @@ CREATE  KEYSPACE IF NOT EXISTS cs4224_keyspace
 USE cs4224_keyspace;
 
 -- import data into tables
-COPY order_by_wd("w_id", "d_id", "o_id", "c_id", "o_carrier_id", "o_ol_cnt", "o_amount", "orderlines") FROM '/home/CS4224_Cassandra/project_files/data_files/order_by_wd.csv' WITH DELIMITER=',' AND NULL = 'null' AND CHUNKSIZE=500;
+COPY order_by_wd("w_id", "d_id", "c_id", "o_id", "o_entry_d", "o_carrier_id", "o_ol_cnt", "o_amount", "orderlines") FROM '/home/CS4224_Cassandra/project_files/data_files/order_by_wd.csv' WITH DELIMITER=',' AND NULL = 'null' AND CHUNKSIZE=500;
 COPY order_by_customer("w_id", "d_id", "c_id", "o_id", "o_entry_d", "o_carrier_id", "o_delivery_d", "orderlines", "o_i_id_list") FROM '/home/CS4224_Cassandra/project_files/data_files/order_by_customer.csv' WITH DELIMITER=',' AND NULL = 'null' AND CHUNKSIZE=500;
 COPY warehouse("w_id", "w_name", "w_street_1", "w_street_2", "w_city", "w_state", "w_zip", "w_tax", "w_ytd") FROM '/home/CS4224_Cassandra/project_files/data_files/warehouse.csv' WITH DELIMITER=',';
 COPY district("w_id", "d_id", "d_name", "d_street_1", "d_street_2", "d_city", "d_state", "d_zip", "d_tax", "d_ytd") FROM '/home/CS4224_Cassandra/project_files/data_files/district1.csv' WITH DELIMITER=',';

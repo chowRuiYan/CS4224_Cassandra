@@ -120,8 +120,9 @@ CREATE TABLE IF NOT EXISTS customer_by_wd (
 CREATE TABLE IF NOT EXISTS order_by_wd (
   W_ID int,
   D_ID int,
-  O_ID int,
   C_ID int,
+  O_ID int,
+  O_ENTRY_D timestamp,
   O_CARRIER_ID int,
   O_AMOUNT decimal,
   O_OL_CNT decimal,

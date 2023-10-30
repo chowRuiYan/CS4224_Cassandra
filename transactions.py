@@ -131,14 +131,20 @@ def order_status_transaction(w_id, d_id, c_id):
 def stock_level_transaction(w_id, d_id, T, L):
     S = session.execute(last_L_orders_select, [w_id, d_id, L])
 
-    allItems = [o.ORDERLINES for o in S]
-    allItemsID = [item.I_ID for item in allItems]
+    allItems = [o.orderlines for o in S]
+    
+    # Flatten allItems
+    flatAllItems = []
+    for orderlines in allItems:
+        flatAllItems += orderlines
+
+    allItemsID = [item.i_id for item in flatAllItems]
     count = 0
 
     for itemID in allItemsID:
         quantity = session.execute(stock_by_item_select_quantity, [itemID, w_id])
 
-        if (quantity < T):
+        if (quantity[0].s_quantity < T):
             count += 1
 
     print(f"Number Of Items Below Threshold: {count}")
@@ -158,7 +164,7 @@ def popular_item_transaction(w_id, d_id, L):
 
     # Find popular items for each order
     for order in L_orders:
-        o_id, o_c_id, o_entry_d, orderlines = order.o_id, order.o_c_id, order.o_entry_d, order.orderlines
+        o_id, o_c_id, o_entry_d, orderlines = order.o_id, order.c_id, order.o_entry_d, order.orderlines
         row = session.execute(customer_by_wd_select, [w_id, d_id, o_c_id]).one()
         c_first, c_middle, c_last = row.c_first, row.c_middle, row.c_last
 

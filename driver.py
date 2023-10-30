@@ -28,6 +28,7 @@ def execute(path):
             if not line:
                 break
             
+            print(line)
             splitLine = line.strip().split(',')
             xactType = splitLine[0]
             
@@ -35,43 +36,42 @@ def execute(path):
 
             # Switch Case for Xact Type
             try:
-                match xactType:
-                    case "N":
-                        # New Order Xact
-                        c_id, w_id, d_id, num = input[1:]
-                        num_items = int(num)
-                        item_numbers = []
-                        supplier_warehouses = []
-                        quantities = []
-                        for i in range(num_items):
-                            item_number, supplier_warehouse, quantity = f.readline().strip().split(',')
-                            item_numbers.append(int(item_number))
-                            supplier_warehouses.append(int(supplier_warehouse))
-                            quantities.append(decimal.Decimal(quantity))
-                        new_order_transaction(int(c_id), int(w_id), int(d_id), num_items, item_numbers, supplier_warehouses, quantities)
-                    case "P":
-                        w_id, d_id, c_id, payment = splitLine[1:]
-                        payment_transaction(int(w_id), int(d_id), int(c_id), decimal.Decimal(payment))
-                    case "D":
-                        w_id, carrier_id = splitLine[1:]
-                        delivery_transaction(int(w_id), int(carrier_id))
-                    case "O":
-                        w_id, d_id, c_id = splitLine[1:]
-                        order_status_transaction(int(w_id), int(d_id), int(c_id))
-                    case "S":
-                        w_id, d_id, T, L = splitLine[1:]
-                        stock_level_transaction(int(w_id), int(d_id), decimal.Decimal(T), int(L))
-                    case "I":
-                        w_id, d_id, L = splitLine[1:]
-                        popular_item_transaction(int(w_id), int(d_id), int(L))
-                    case "T":
-                        top_balance_transaction()
-                    case "R":
-                        w_id, d_id, c_id = splitLine[1:]
-                        related_customer_transaction(int(w_id), int(d_id), int(c_id))
-                    case _:
-                        # Invalid
-                        print('Invalid Xact Type')
+                if xactType == "N":
+                    # New Order Xact
+                    c_id, w_id, d_id, num = input[1:]
+                    num_items = int(num)
+                    item_numbers = []
+                    supplier_warehouses = []
+                    quantities = []
+                    for i in range(num_items):
+                        item_number, supplier_warehouse, quantity = f.readline().strip().split(',')
+                        item_numbers.append(int(item_number))
+                        supplier_warehouses.append(int(supplier_warehouse))
+                        quantities.append(decimal.Decimal(quantity))
+                    new_order_transaction(int(c_id), int(w_id), int(d_id), num_items, item_numbers, supplier_warehouses, quantities)
+                elif xactType == "P":
+                    w_id, d_id, c_id, payment = splitLine[1:]
+                    payment_transaction(int(w_id), int(d_id), int(c_id), decimal.Decimal(payment))
+                elif xactType == "D":
+                    w_id, carrier_id = splitLine[1:]
+                    delivery_transaction(int(w_id), int(carrier_id))
+                elif xactType == "O":
+                    w_id, d_id, c_id = splitLine[1:]
+                    order_status_transaction(int(w_id), int(d_id), int(c_id))
+                elif xactType == "S":
+                    w_id, d_id, T, L = splitLine[1:]
+                    stock_level_transaction(int(w_id), int(d_id), decimal.Decimal(T), int(L))
+                elif xactType == "I":
+                    w_id, d_id, L = splitLine[1:]
+                    popular_item_transaction(int(w_id), int(d_id), int(L))
+                elif xactType == "T":
+                    top_balance_transaction()
+                elif xactType == "R":
+                    w_id, d_id, c_id = splitLine[1:]
+                    related_customer_transaction(int(w_id), int(d_id), int(c_id))
+                else:
+                    # Invalid
+                    print('Invalid Xact Type')
             except Exception as e:
                 print(e)
 

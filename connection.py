@@ -80,5 +80,8 @@ top_10_customers_in_each_partition_select = session.prepare(
 order_by_customer_select_i_id_list = session.prepare(
     'SELECT o_i_id_list FROM order_by_customer WHERE w_id=? and d_id=? AND c_id=?')
 
+order_by_customer_select_i_id_list_not_in_warehouse = session.prepare(
+    'SELECT o_i_id_list FROM order_by_customer WHERE NOT w_id=?')
+
 customer_by_wd_select_all = session.prepare(
     'SELECT * FROM customer_by_wd')

@@ -27,8 +27,7 @@ from connection import (
     last_L_orders_select,
     stock_by_item_select_quantity,
     top_10_customers_in_each_partition_select,
-    order_by_customer_select_i_id_list,
-    customer_by_wd_select_all
+    order_by_customer_list
 )
 
 def new_order_transaction(c_id, w_id, d_id, num_items, item_numbers, supplier_warehouses, quantities):
@@ -219,28 +218,39 @@ def top_balance_transaction():
 def related_customer_transaction(w_id, d_id, c_id):
     # Get orders from customer in list<list<ITEM_QTY>>. Each element in the outer list represents one order
     # Each element in the inner list represents an item in that order
-    customerOrderItemLists = session.execute(order_by_customer_select_i_id_list, [w_id, d_id, c_id])
     
     # To prevent duplicate results
     relatedCustomerSet = set()
     
-    # Get all other customers from other warehouse and district 
-    otherCustomers = session.execute(customer_by_wd_select_all)
-    
-    
-    for otherCustomer in otherCustomers:
-        o_w_id, o_d_id, o_c_id = otherCustomer.w_id, otherCustomer.d_id, otherCustomer.c_id
-        if (o_w_id == w_id):
-            continue
+    # Get all Customer OrderItemLists
+    allCustomerOrderItemLists = session.execute(order_by_customer_list)
 
-        otherCustomerOrderItemLists = session.execute(order_by_customer_select_i_id_list, [o_w_id, o_d_id, o_c_id])
+    # Filter out
+    customerOrderItemLists = allCustomerOrderItemLists[otherCustomerOrderItemLists['w_id'] == w_id and
+                                                       otherCustomerOrderItemLists['d_id'] == d_id and  
+                                                       otherCustomerOrderItemLists['c_id'] == c_id
+                                                       ]
+    
+    # Get all other customers from other warehouse and district 
+    otherCustomerOrderItemLists = allCustomerOrderItemLists[allCustomerOrderItemLists['w_id'] != w_id]
+    
+    for otherCustomer in otherCustomerOrderItemLists:
+        o_w_id, o_d_id, o_c_id = otherCustomer.w_id, otherCustomer.d_id, otherCustomer.c_id
+        print(o_w_id, o_d_id, o_c_id)
+
+        specificOtherCustomerOrderItemLists = otherCustomerOrderItemLists[otherCustomerOrderItemLists['w_id'] == o_w_id and
+                                                                          otherCustomerOrderItemLists['d_id'] == o_d_id and  
+                                                                          otherCustomerOrderItemLists['c_id'] == o_c_id
+                                                                        ]
+
+        print(specificOtherCustomerOrderItemLists)
         
         found = False
         # For each order in customer
         for custOrderItemList in customerOrderItemLists:
             # For each order in other customer
-            for otherCustomerOrderItemList in otherCustomerOrderItemLists:
-                if match(custOrderItemList, otherCustomerOrderItemList):
+            for specificOtherCustomerOrderItemList in specificOtherCustomerOrderItemLists:
+                if match(custOrderItemList, specificOtherCustomerOrderItemList):
                     custIdTuple = (o_w_id, o_d_id, o_c_id)
                     relatedCustomerSet.add(custIdTuple)
                     found = True

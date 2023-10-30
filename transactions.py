@@ -211,7 +211,7 @@ def top_balance_transaction():
     
     for i in range(10):
         t = top10[i]
-        w_id, d_id, c_balance, c_id, c_first, c_middle, c_last = t.w_id, t.d_id, t.c_balance, t.c_id, t.c_first, t.c_middle, t.c_last
+        w_id, d_id, c_balance, c_first, c_middle, c_last = t.w_id, t.d_id, t.c_balance, t.c_first, t.c_middle, t.c_last
         row = session.execute(warehouse_select, [w_id]).one()
         w_name = row.w_name
         row = session.execute(district_select, [w_id, d_id]).one()

@@ -6,5 +6,10 @@
 Repeat for xact 0 to 19
 5. Run process_output.py 
 
-Errors:
-- 0.txt:
+
+Misc:
+- No module named 'cassandra'
+Install sudo, pip3, then install cassandra-driver
+
+TODO:
+split COPY into seperate files

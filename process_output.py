@@ -38,16 +38,16 @@ session = cluster.connect("cs4224_keyspace")
 dbstate = 'dbstate.csv'
 with open(dbstate, 'w', newline='') as dbstate_csv:
     outputWriter = csv.writer(dbstate_csv)
-    outputWriter.writerow(session.execute('SELECT sum(W_YTD) FROM Warehouse'))
-    outputWriter.writerow(session.execute('SELECT sum(D_YTD) FROM district'))
-    outputWriter.writerow(session.execute('SELECT sum(NEXT_O_ID) FROM info_for_new_order'))
-    outputWriter.writerow(session.execute('SELECT sum(C_BALANCE) FROM customer_by_wd'))
-    outputWriter.writerow(session.execute('SELECT sum(C_YTD_PAYMENT) FROM customer_by_wd'))
+    outputWriter.writerow(session.execute('SELECT sum(W_YTD) FROM Warehouse').one())
+    outputWriter.writerow(session.execute('SELECT sum(D_YTD) FROM district').one())
+    outputWriter.writerow(session.execute('SELECT sum(NEXT_O_ID) FROM info_for_new_order').one())
+    outputWriter.writerow(session.execute('SELECT sum(C_BALANCE) FROM customer_by_wd').one())
+    outputWriter.writerow(session.execute('SELECT sum(C_YTD_PAYMENT) FROM customer_by_wd').one())
 
-    outputWriter.writerow(session.execute('SELECT sum(C_PAYMENT_CNT) FROM customer_by_wd'))
-    outputWriter.writerow(session.execute('SELECT sum(C_DELIVERY_CNT) FROM customer_by_wd'))
-    outputWriter.writerow(session.execute('SELECT max(O_ID) FROM order_by_wd'))
-    outputWriter.writerow(session.execute('SELECT sum(O_OL_CNT) FROM order_by_wd'))
+    outputWriter.writerow(session.execute('SELECT sum(C_PAYMENT_CNT) FROM customer_by_wd').one())
+    outputWriter.writerow(session.execute('SELECT sum(C_DELIVERY_CNT) FROM customer_by_wd').one())
+    outputWriter.writerow(session.execute('SELECT max(O_ID) FROM order_by_wd').one())
+    outputWriter.writerow(session.execute('SELECT sum(O_OL_CNT) FROM order_by_wd').one())
 
     # Orderline items
     orderlines = session.execute('SELECT ORDERLINES FROM order_by_wd')
@@ -64,7 +64,7 @@ with open(dbstate, 'w', newline='') as dbstate_csv:
     outputWriter.writerow([max(ol_amount)])
     outputWriter.writerow([sum(ol_quantity)])
 
-    outputWriter.writerow(session.execute('SELECT sum(S_QUANTITY) FROM stock_by_item'))
-    outputWriter.writerow(session.execute('SELECT sum(S_YTD) FROM stock_by_item'))
-    outputWriter.writerow(session.execute('SELECT sum(S_ORDER_CNT) FROM stock_by_item'))
-    outputWriter.writerow(session.execute('SELECT sum(S_REMOTE_CNT) FROM stock_by_item'))
+    outputWriter.writerow(session.execute('SELECT sum(S_QUANTITY) FROM stock_by_item').one())
+    outputWriter.writerow(session.execute('SELECT sum(S_YTD) FROM stock_by_item').one())
+    outputWriter.writerow(session.execute('SELECT sum(S_ORDER_CNT) FROM stock_by_item').one())
+    outputWriter.writerow(session.execute('SELECT sum(S_REMOTE_CNT) FROM stock_by_item').one())

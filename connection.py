@@ -2,7 +2,10 @@
 
 from cassandra.cluster import Cluster
 
-cluster = Cluster()
+# Use on soc compute clusters
+cluster = Cluster(['192.168.51.118', '192.168.51.119', '192.168.51.120', '192.168.51.121', '192.168.51.122'])
+# Use locally
+# cluster = Cluster()
 session = cluster.connect("cs4224_keyspace")
 
 class Orderline(object):

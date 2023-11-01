@@ -30,7 +30,7 @@ with open(throughput, 'w', newline='') as throughput_csv:
 
 # Database state
 # # Use on soc compute clusters
-cluster = Cluster(['192.168.51.118', '192.168.51.119', '192.168.51.120', '192.168.51.121', '192.168.51.122'])
+cluster = Cluster(['192.168.51.123', '192.168.51.124', '192.168.51.125', '192.168.51.126', '192.168.51.127'])
 # Use locally
 # cluster = Cluster()
 session = cluster.connect("cs4224_keyspace")

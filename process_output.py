@@ -29,7 +29,10 @@ with open(throughput, 'w', newline='') as throughput_csv:
     outputWriter.writerow(throughputOutput)
 
 # Database state
-cluster = Cluster()
+# # Use on soc compute clusters
+cluster = Cluster(['192.168.51.118', '192.168.51.119', '192.168.51.120', '192.168.51.121', '192.168.51.122'])
+# Use locally
+# cluster = Cluster()
 session = cluster.connect("cs4224_keyspace")
 
 dbstate = 'dbstate.csv'

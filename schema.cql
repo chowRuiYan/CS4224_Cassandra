@@ -1,16 +1,8 @@
--- create your own tables here
-
--- xact2&3
--- potential optimisation: can we do away with orderlines table? t3 only needs aggregation of ol_amount, can sum of ol_amount be stored in orders table instead
--- potential optimisation: do we need to store both d_ytd in district table and w_ytd in warehouse table? need to check other transactions
-
 -- Access cs4224_keyspace
-DROP KEYSPACE IF EXISTS cs4224_keyspace;
-
 CREATE  KEYSPACE IF NOT EXISTS cs4224_keyspace
 WITH REPLICATION = {
   'class' : 'SimpleStrategy',
-  'replication_factor' : 1
+  'replication_factor' : 3
 };
 
 USE cs4224_keyspace;

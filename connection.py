@@ -1,9 +1,10 @@
 # Specific how to connect to a running Cassandra database
 
 from cassandra.cluster import Cluster
+from cassandra import ConsistencyLevel
 
 # Use on soc compute clusters
-cluster = Cluster(['192.168.51.142', '192.168.51.143', '192.168.51.125', '192.168.51.126', '192.168.51.127'])
+cluster = Cluster(['192.168.51.42', '192.168.51.43', '192.168.51.125', '192.168.51.126', '192.168.51.127'])
 # Use locally
 # cluster = Cluster()
 session = cluster.connect("cs4224_keyspace")
@@ -35,14 +36,17 @@ stock_by_item_select = session.prepare(
 # xact 1
 stock_by_item_update = session.prepare(
     'UPDATE stock_by_item SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? WHERE i_id=? AND w_id=?')
+stock_by_item_update.consistency_level = ConsistencyLevel.QUORUM
 
 # xact 1
 order_by_wd_insert = session.prepare(
     'INSERT INTO order_by_wd (w_id, d_id, o_id, c_id, o_amount, o_ol_cnt, orderlines, o_carrier_id) VALUES (?, ?, ?, ?, ?, ?, ?, -1)')
+order_by_wd_insert.consistency_level = ConsistencyLevel.QUORUM
 
 # xact 1
 order_by_customer_insert = session.prepare(
     'INSERT INTO order_by_customer (w_id, d_id, c_id, o_id, o_entry_d, orderlines, o_i_id_list, o_carrier_id) VALUES (?, ?, ?, ?, ?, ?, ?, -1)')
+order_by_customer_insert.consistency_level = ConsistencyLevel.QUORUM
 
 # xact 2, 7
 warehouse_select = session.prepare(

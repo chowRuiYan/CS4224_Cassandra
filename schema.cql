@@ -8,7 +8,8 @@ WITH REPLICATION = {
 USE cs4224_keyspace;
 
 -- Drop all
-DROP TYPE IF EXISTS orderline;
+DROP MATERIALIZED VIEW IF EXISTS order_by_oid;
+DROP MATERIALIZED VIEW IF EXISTS customer_by_balance;
 
 DROP TABLE IF EXISTS warehouse;
 DROP TABLE IF EXISTS district;
@@ -18,8 +19,7 @@ DROP TABLE IF EXISTS customer_by_wd;
 DROP TABLE IF EXISTS order_by_wd;
 DROP TABLE IF EXISTS order_by_customer;
 
-DROP MATERIALIZED VIEW IF EXISTS order_by_oid;
-DROP MATERIALIZED VIEW IF EXISTS customer_by_balance;
+DROP TYPE IF EXISTS orderline;
 
 -- Create Types
 CREATE TYPE orderline (

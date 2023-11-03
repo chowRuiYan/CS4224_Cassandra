@@ -232,9 +232,9 @@ def related_customer_transaction(w_id, d_id, c_id):
     allCustomerOrderItemLists = session.execute(order_by_customer_list)
 
     # Filter out
-    customerOrderItemLists = allCustomerOrderItemLists[otherCustomerOrderItemLists['w_id'] == w_id and
-                                                       otherCustomerOrderItemLists['d_id'] == d_id and  
-                                                       otherCustomerOrderItemLists['c_id'] == c_id
+    customerOrderItemLists = allCustomerOrderItemLists[allCustomerOrderItemLists['w_id'] == w_id and
+                                                       allCustomerOrderItemLists['d_id'] == d_id and  
+                                                       allCustomerOrderItemLists['c_id'] == c_id
                                                        ]
     
     # Get all other customers from other warehouse and district 

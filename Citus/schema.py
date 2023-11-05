@@ -176,6 +176,48 @@ print("Finished creating stock")
 print("Commiting")
 connection.commit()
 
+
+print("Make item reference table")
+cursor.execute("""
+SELECT create_reference_table('item');
+""")
+
+print("Commiting")
+connection.commit()
+
+
+print("Setting citusmulti_shard_modify_mode")
+cursor.execute("""
+SET LOCAL citus.multi_shard_modify_mode TO 'sequential';
+""")
+print("Distribute warehouse")
+cursor.execute("""
+SELECT create_distributed_table('warehouse', 'w_id');
+""")
+print("Distribute district")
+cursor.execute("""
+SELECT create_distributed_table('district', 'd_w_id', colocate_with => 'warehouse');
+""")
+print("Distribute customer")
+cursor.execute("""
+SELECT create_distributed_table('customer', 'c_w_id', colocate_with => 'warehouse');
+""")
+print("Distribute orders")
+cursor.execute("""
+SELECT create_distributed_table('orders', 'o_w_id', colocate_with => 'warehouse');
+""")
+print("Distribute order_lines")
+cursor.execute("""
+SELECT create_distributed_table('order_lines', 'ol_w_id', colocate_with => 'warehouse');
+""")
+print("Distribute stock")
+cursor.execute("""
+SELECT create_distributed_table('stock', 's_w_id', colocate_with => 'warehouse');
+""")
+
+print("Commiting distributions")
+connection.commit()
+
 # Close the cursor and connection
 cursor.close()
 connection.close()

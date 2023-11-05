@@ -1,3 +1,5 @@
+"""NOTE: should batch add order_lines and stock data. takes rly long"""
+
 import psycopg2
 
 # Replace these with your Citus database connection details
@@ -16,8 +18,17 @@ connection = psycopg2.connect(
 
 # Create a cursor object to interact with the database
 cursor = connection.cursor()
-
 print("Cursor Created")
+print("Copy item")
+cursor.execute("""
+COPY item(I_ID, I_NAME, I_PRICE, I_IM_ID, I_DATA)
+FROM '/home/CS4224_Cassandra/project_files/data_files/item.csv' 
+DELIMITER ','
+""")
+print("Finished copying item")
+print("Commiting")
+connection.commit()
+
 
 print("Copy warehouse")
 cursor.execute("""
@@ -26,6 +37,8 @@ FROM '/home/CS4224_Cassandra/project_files/data_files/warehouse.csv'
 DELIMITER ','
 """)
 print("Finished copying warehouse")
+print("Commiting")
+connection.commit()
 
 print("Copy district")
 cursor.execute("""
@@ -34,6 +47,8 @@ FROM '/home/CS4224_Cassandra/project_files/data_files/district.csv'
 DELIMITER ','
 """)
 print("Finished copying district")
+print("Commiting")
+connection.commit()
 
 print("Copy customer")
 cursor.execute("""
@@ -43,6 +58,8 @@ FROM '/home/CS4224_Cassandra/project_files/data_files/customer.csv'
 DELIMITER ','
 """)
 print("Finished copying customer")
+print("Commiting")
+connection.commit()
 
 print("Copy orders")
 cursor.execute("""
@@ -51,14 +68,8 @@ FROM '/home/CS4224_Cassandra/project_files/data_files/order1.csv'
 DELIMITER ','
 """)
 print("Finished copying orders")
-
-print("Copy item")
-cursor.execute("""
-COPY item(I_ID, I_NAME, I_PRICE, I_IM_ID, I_DATA)
-FROM '/home/CS4224_Cassandra/project_files/data_files/item.csv' 
-DELIMITER ','
-""")
-print("Finished copying item")
+print("Commiting")
+connection.commit()
 
 print("Copy order_lines")
 cursor.execute("""
@@ -68,6 +79,8 @@ FROM '/home/CS4224_Cassandra/project_files/data_files/order-line1.csv'
 DELIMITER ','
 """)
 print("Finished copying order_lines")
+print("Commiting")
+connection.commit()
 
 print("Copy stock")
 cursor.execute("""

@@ -169,8 +169,9 @@ $$ LANGUAGE plpgsql;
 """)
 
 # Xact 3
+print("Create procedure for Transaction 3: Delivery")
 cursor.execute("""
-CREATE PROCEDURE delivery(W_ID INT, CARRIER_ID INT) AS $$
+CREATE OR REPLACE PROCEDURE delivery(W_ID INT, CARRIER_ID INT) AS $$
 DECLARE DISTRICT_NO INT;
 N INT;
 B INT;
@@ -205,44 +206,98 @@ $$ LANGUAGE plpgsql;
 """)
 
 # Xact 4
+print("Create functions for Transaction 4: Order Status")
+
 cursor.execute("""
-CREATE PROCEDURE order_status(C_W_ID INT, C_D_ID INT, C_ID INT) AS $$
-DECLARE LAST_ORDER INT;
+CREATE TYPE order_status_1_type AS (
+    c_first VARCHAR(16),
+    c_middle CHAR(2),
+    c_last VARCHAR(16),
+    c_balance DECIMAL(12, 2)
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION order_status_1(C_W_ID INT, C_D_ID INT, C_ID INT) RETURNS SETOF order_status_1_type AS $$
 BEGIN
-SELECT c_first,
+RETURN (SELECT c_first,
     c_middle,
-    c_last
+    c_last,
+    c_balance
 FROM customer
-WHERE c_id = C_ID;
-SELECT MAX(O_ID) INTO LAST_ORDER
+WHERE c_w_id = C_W_ID
+    AND c_d_id = C_D_ID
+    AND c_id = C_ID);
+END;
+$$ LANGUAGE plpgsql;
+""")
+
+cursor.execute("""
+CREATE TYPE order_status_2_type AS (
+    o_id INT,
+    o_entry_d TIMESTAMP,
+    o_carrier_id INT,
+    ol_i_id INT,
+    ol_supply_w_id INT,
+    ol_quantity DECIMAL(2, 0),
+    ol_amount DECIMAL(7, 2),
+    ol_delivery_d TIMESTAMP
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION order_status_2(C_W_ID INT, C_D_ID INT, C_ID INT) RETURNS SETOF order_status_2_type AS $$
+DECLARE LAST_ORDER INT;
+O_ID INT;
+O_ENTRY_D TIMESTAMP;
+O_CARRIER_ID INT;
+BEGIN
+SELECT MAX(o_id) INTO LAST_ORDER
 FROM orders
-WHERE o_c_id = C_ID;
-SELECT O_ID,
-    O_ENTRY_D,
-    O_CARRIER_ID
+WHERE o_w_id = C_W_ID
+    AND o_d_id = C_D_ID
+    AND o_c_id = C_ID;
+SELECT o_id INTO O_ID,
+    o_entry_d INTO O_ENTRY_D,
+    o_carrier_id INTO O_CARRIER_ID
 FROM orders
 WHERE o_id = LAST_ORDER;
-SELECT ol_i_id,
+RETURN (SELECT
+    O_ID,
+    O_ENTRY_D,
+    O_CARRIER_ID,
+    ol_i_id,
     ol_supply_w_id,
     ol_quantity,
     ol_amount,
     ol_delivery_d
 FROM order_lines
-WHERE ol_o_id = LAST_ORDER;
+WHERE ol_o_id = LAST_ORDER);
 END;
 $$ LANGUAGE plpgsql;
 """)
 
 # Xact 5
+print("Create function for Transaction 5: Stock Level")
 cursor.execute("""
-CREATE PROCEDURE stock(W_ID INT, D_ID INT, T INT, L INT) AS $$ BEGIN
+CREATE OR REPLACE FUNCTION stock_level(W_ID INT, D_ID INT, T INT, L INT) RETURNS INT AS $$
 DECLARE N INT;
-SELECT d_next_o_id INTO N
-    FROM district
-    WHERE d_id = D_ID AND d_w_id = W_ID;
-SELECT sum(*)
+RESULT INT;
+BEGIN
+SELECT 1+MAX(o_id) INTO N
+FROM orders
+WHERE o_w_id = W_ID
+    AND o_d_id = D_ID;
+WITH S AS (
+    SELECT DISTINCT OL_I_ID INTO S
     FROM order_lines
-    WHERE ol_w_id = W_ID AND ol_d_id = D_ID AND ol_o_id >= N-L AND ol_o_id <= N AND ol_quantity < T
+    WHERE ol_w_id = W_ID
+        AND ol_d_id = D_ID
+        AND ol_o_id BETWEEN N-L AND N-1
+)
+SELECT COUNT(*) INTO RESULT
+FROM stock JOIN S ON stock.s_i_id = S.ol_i_id
+WHERE s_w_id = W_ID
+    AND s_quantity < T;
+RETURN RESULT;
 END;
 $$ LANGUAGE plpgsql;
 """)

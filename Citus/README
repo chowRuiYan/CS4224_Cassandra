@@ -1,0 +1,9 @@
+## Running Citus and Testing
+1. Run transform_data.py
+2. Run schema.py
+3. Run load_table.py
+
+
+Misc:
+- No module named 'psycopg2'
+Install sudo, pip3, then install psycopg2

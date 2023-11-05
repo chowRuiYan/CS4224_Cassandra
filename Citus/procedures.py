@@ -1,8 +1,7 @@
-## Baseline code from chatgpt
 import psycopg2
 
 # Replace these with your Citus database connection details
-db_host = "your_database_host"
+db_host = "localhost"
 db_name = "your_database_name"
 db_user = "your_database_user"
 db_password = "your_database_password"
@@ -294,33 +293,34 @@ END;
 $$ LANGUAGE plpgsql;
 """)
 
-# Xact 8 TODO: FINISH
+# Xact 8 
 cursor.execute("""
-CREATE PROCEDURE related_customer(C_W_ID, C_D_ID, C_ID) AS $$ BEGIN
+CREATE PROCEDURE getCustomerOrderItems(C_W_ID, C_D_ID, C_ID) AS $$ BEGIN
+SELECT order.o_c_id, order.o_id, order_lines.ol_i_id
+    FROM order 
+        INNER JOIN order_lines ON order.o_id = order_lines.ol_o_id
+    WHERE order.o_c_id = C_ID
+END;
+$$ LANGUAGE plpgsql;
+""")
+
+cursor.execute("""
+CREATE PROCEDURE getOtherCustomerOrderItems(C_W_ID, C_D_ID, C_ID) AS $$ BEGIN
 WITH diffWarehouse(c_w_id, c_d_id, c_id) as
     (SELECT c_w_id, c_d_id, c_id
         FROM customer
         WHERE c_w_id <> C_W_ID AND c_id <> C_ID
     ),
-    custOrderItems(c_id, o_id, i_id) as
-    (SELECT order.o_c_id, order.o_id, order_lines.ol_i_id
+SELECT order.o_w_id, order.o_d_id, order.o_c_id, order.o_id, order_lines.ol_i_id
         FROM order 
             INNER JOIN order_lines ON order.o_id = order_lines.ol_o_id
-    )
-SELECT c_w_id, c_d_id, c_id
-    FROM diffWarehouse
-    WHERE 
+        WHERE order.o_c_id IN (SELECT c_id FROM diffWarehouse)
 END;
 $$ LANGUAGE plpgsql;
 """)
 
 # Call Procedures with
 # cursor.callproc(<procedure_name>[, <parameters>, ...])
-
-# Fetch and print the results
-results = cursor.fetchall()
-for row in results:
-    print(row)
 
 # Close the cursor and connection
 cursor.close()

@@ -34,7 +34,20 @@ def execute(path, connection):
             # Switch Case for Xact Type
             try:
                 if xactType == "N":
-                    pass
+                    w_id, d_id, c_id nums_item = splitLine[1:]
+                    cursor.execute(f"""CALL new_order_init({w_id, d_id, c_id, M});""")
+                    N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchAll()
+                    TOTAL_AMOUNT = 0
+                    for i in nums_item:
+                        item = file.readline();
+                        item_inputs = item.strip().split(',')
+                        i_id = item_inputs[0]
+                        i_supplier_w_id = item_inputs[1]
+                        i_quantity = item_inputs[2]
+                        cursor.execute(f"""CALL new_order_add_orderline({w_id, d_id, c_id, N, i, i_id, i_supplier_w_id, i_quantity});""")
+                        i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = cursor.fetchAll()
+                        TOTAL_AMOUNT = TOTAL_AMOUNT + ol_amount
+                    TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + w_tax + d_tax) * (1 - c_discount)
                 elif xactType == "P":
                     pass
 

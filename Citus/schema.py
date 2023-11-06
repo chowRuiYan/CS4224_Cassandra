@@ -194,6 +194,9 @@ print("Distribute warehouse")
 cursor.execute("""
 SELECT create_distributed_table('warehouse', 'w_id');
 """)
+print("Commiting")
+connection.commit()
+
 print("Distribute district")
 cursor.execute("""
 SELECT create_distributed_table('district', 'd_w_id', colocate_with => 'warehouse');

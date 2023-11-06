@@ -196,26 +196,84 @@ $$ LANGUAGE plpgsql;
 
 # Xact 2
 cursor.execute("""
-CREATE PROCEDURE payment(C_W_ID INT, C_D_ID INT, C_ID INT, PAYMENT INT) AS $$ BEGIN
+CREATE TYPE payment_customer AS (
+    C_FIRST VARCHAR,
+    C_MIDDLE CHAR,
+    C_LAST VARCHAR,
+    C_STREET_1 VARCHAR,
+    C_STREET_2 VARCHAR,
+    C_CITY VARCHAR,
+    C_STATE CHAR,
+    C_ZIP CHAR,
+    C_PHONE CHAR,
+    C_SINCE TIMESTAMP,
+    C_CREDIT CHAR,
+    C_CREDIT_LIMIT DECIMAL,
+    C_DISCOUNT DECIMAL,
+    C_BALANCE DECIMAL
+);
+""")
+cursor.execute("""
+CREATE TYPE payment_warehouse AS (
+    W_STREET_1 VARCHAR,
+    W_STREET_2 VARCHAR,
+    W_CITY VARCHAR,
+    W_STATE CHAR,
+    W_ZIP CHAR
+);
+""")
+cursor.execute("""
+CREATE TYPE payment_district AS (
+    D_STREET_1 VARCHAR,
+    D_STREET_2 VARCHAR,
+    D_CITY VARCHAR,
+    D_STATE CHAR,
+    D_ZIP CHAR
+);
+""")
+cursor.execute("""
+CREATE TYPE payment_type AS (
+    CUSTOMER_DETAIL payment_customer,
+    WAREHOUSE_DETAIL payment_warehouse,
+    DISTRICT_DETAIL payment_district
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION payment(IN_C_W_ID INT, IN_C_D_ID INT, IN_C_ID INT, PAYMENT INT) 
+RETURNS payment_type
+AS $$ 
+DECLARE
+CUSTOMER_DETAIL payment_customer;
+WAREHOUSE_DETAIL payment_warehouse;
+DISTRICT_DETAIL payment_district;
+BEGIN
 UPDATE warehouse
 SET w_ytd = w_ytd + PAYMENT
-WHERE w_id = C_W_ID;
-UPDATE district
+WHERE w_id = IN_C_W_ID;
+UPDATE district 
 SET d_ytd = d_ytd + PAYMENT
-WHERE d_w_id = C_W_ID
-    AND d_id = C_D_ID;
+WHERE d_w_id = IN_C_W_ID
+    AND d_id = IN_C_D_ID;
 UPDATE customer
 SET c_balance = c_balance - PAYMENT,
     c_ytd_payment = c_ytd_payment - PAYMENT,
     c_payment_cnt = c_payment_cnt + 1
-WHERE c_w_id = C_W_ID
-    AND c_d_id = C_D_ID
-    AND c_id = C_ID;
-SELECT *
+WHERE c_w_id = IN_C_W_ID
+    AND c_d_id = IN_C_D_ID
+    AND c_id = IN_C_ID;
+SELECT (c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_limit, c_discount, c_balance) INTO CUSTOMER_DETAIL
 FROM customer
-WHERE c_w_id = C_W_ID
-    AND c_d_id = C_D_ID
-    AND c_id = C_ID;
+WHERE c_w_id = IN_C_W_ID
+    AND c_d_id = IN_C_D_ID
+    AND c_id = IN_C_ID;
+SELECT (d_street_1, d_street_2, d_city, d_state, d_zip) INTO DISTRICT_DETAIL
+FROM district
+WHERE d_w_id = IN_C_W_ID
+AND d_id = IN_C_D_ID;
+SELECT (w_street_1, w_street_2, w_city, w_state, w_zip) INTO WAREHOUSE_DETAIL
+FROM warehouse
+WHERE w_id = IN_C_W_ID;
+RETURN (CUSTOMER_DETAIL, WAREHOUSE_DETAIL, DISTRICT_DETAIL);
 END;
 $$ LANGUAGE plpgsql;              
 """)

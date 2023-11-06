@@ -34,7 +34,7 @@ def execute(path, connection):
             # Switch Case for Xact Type
             try:
                 if xactType == "N":
-                    w_id, d_id, c_id nums_item = splitLine[1:]
+                    w_id, d_id, c_id, nums_item = splitLine[1:]
                     cursor.execute(f"""CALL new_order_init({w_id, d_id, c_id, M});""")
                     N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchAll()
                     TOTAL_AMOUNT = 0
@@ -49,8 +49,9 @@ def execute(path, connection):
                         TOTAL_AMOUNT = TOTAL_AMOUNT + ol_amount
                     TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + w_tax + d_tax) * (1 - c_discount)
                 elif xactType == "P":
-                    pass
-
+                    w_id, d_id, c_id, payment = splitLine[1:]
+                    cursor.execute(f"""CALL payment({w_id, d_id, c_id, payment});""")
+                    customer_detail, district_detail, warehouse_detail = cursor.fetchAll()
                 elif xactType == "D":
                     w_id, carrier_id = splitLine[1:]
                     cursor.execute(f"""CALL delivery({w_id}, {carrier_id});""")

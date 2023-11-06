@@ -21,86 +21,150 @@ cursor = connection.cursor()
 
 # Xact 1
 cursor.execute("""
-CREATE PROCEDURE new_order(
-    W_ID INT,
-    D_ID INT,
-    C_ID INT,
-    NUM_ITEMS INT,
-    ITEM_NUMBER INT [],
-    SUPPLIER_WAREHOUSE INT [],
-    QUANTITY INT []
-) AS $$
-DECLARE N INT;
-TOTAL_AMOUNT INT;
-DEFINED_O_ALL_LOCAL_COUNT INT;
-IDX INT;
-ADJUSTED_QUANTITY INT;
+CREATE TYPE new_order_init_type AS (
+    N INT,
+    C_LAST VARCHAR(16),
+    C_CREDIT VARCHAR(2),
+    C_DISCOUNT DECIMAL(5,4),
+    W_TAX DECIMAL(4,4),
+    D_TAX DECIMAL(4,4)
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION new_order_init(
+    IN_W_ID INT,
+    IN_D_ID INT,
+    IN_C_ID INT,
+    IN_NUM_ITEMS INT
+)
+RETURNS new_order_init_type
+AS $$
+DECLARE 
+N INT;
+GET_D_TAX DECIMAL(4,4);
+GET_W_TAX DECIMAL(4,4);
+GET_C_DISCOUNT DECIMAL(5,4);
+GET_C_LAST VARCHAR(16);
+GET_C_CREDIT VARCHAR(2);
+BEGIN
+SELECT d.d_next_o_id INTO N
+FROM district d
+WHERE d.d_w_id = IN_W_ID
+    AND d.d_id = IN_D_ID;
+UPDATE district
+SET d_next_o_id = d_next_o_id + 1
+WHERE d_w_id = IN_W_ID
+    AND d_id = IN_D_ID;
+SELECT d_tax INTO GET_D_TAX
+FROM district
+WHERE d_w_id = IN_W_ID
+    AND d_id = IN_D_ID;
+SELECT w_tax INTO GET_W_TAX
+FROM warehouse 
+WHERE w_id = IN_W_ID;
+SELECT c_last INTO GET_C_LAST
+FROM customer
+WHERE c_id = IN_C_ID
+AND c_w_id = IN_W_ID
+AND c_d_id = IN_D_ID;
+SELECT c_discount INTO GET_C_DISCOUNT
+FROM customer
+WHERE c_id = IN_C_ID
+AND c_w_id = IN_W_ID
+AND c_d_id = IN_D_ID;
+SELECT c_credit INTO GET_C_CREDIT
+FROM customer
+WHERE c_id = IN_C_ID
+AND c_w_id = IN_W_ID
+AND c_d_id = IN_D_ID;
+INSERT INTO orders(
+    o_id,
+    o_d_id,
+    o_w_id,
+    o_c_id,
+    o_entry_d,
+    o_carrier_id,
+    o_ol_cnt,
+    o_all_local
+) VALUES(
+    N,
+    IN_D_ID,
+    IN_W_ID,
+    IN_C_ID,
+    CURRENT_TIMESTAMP,
+    NULL,
+    IN_NUM_ITEMS,
+    1);
+RETURN (N, GET_C_LAST, GET_C_CREDIT, GET_C_DISCOUNT, GET_W_TAX, GET_D_TAX);
+END;
+$$ LANGUAGE plpgsql;
+""")
+
+cursor.execute("""
+CREATE TYPE new_order_add_orderline_type AS (
+    I_NAME VARCHAR(24),
+    OL_AMOUNT DECIMAL,
+    OL_SUPPLY_W_ID INT,
+    OL_QUANTITY INT,
+    S_QUANTITY INT
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION new_order_add_orderline(
+    IN_W_ID INT,
+    IN_D_ID INT,
+    IN_C_ID INT,
+    N INT, 
+    IN_OL_NUMBER INT,
+    IN_OL_I_ID INT,
+    IN_OL_SUPPLY_W_ID INT,
+    IN_OL_QUANTITY INT
+)
+RETURNS new_order_add_orderline_type
+AS $$
+DECLARE 
+ADJUSTED_S_QUANTITY INT;
 RETRIEVED_S_QUANTITY INT;
 RETRIEVED_I_PRICE DECIMAL(5, 2);
 ITEM_AMOUNT DECIMAL;
+ITEM_NAME VARCHAR(24);
 FORMATTED_DIST_INFO VARCHAR;
-RETRIEVED_D_TAX DECIMAL;
-RETRIEVED_W_TAX DECIMAL;
-RETRIEVED_C_DISCOUNT DECIMAL;
-BEGIN FORMATTED_DIST_INFO := 'S_DIST_' || D_ID;
-DEFINED_O_ALL_LOCAL_COUNT := 1;
-SELECT d_next_o_id INTO N
-FROM district
-WHERE d_w_id = W_ID
-    AND d_id = D_ID;
-UPDATE district
-SET d_next_o_id = d_next_o_id + 1
-WHERE d_w_id = W_ID
-    AND d_id = D_ID;
-FOR IDX IN 1..NUMS_ITEMS LOOP IF SUPPLIER_WAREHOUSE [IDX] <> W_ID THEN DEFINED_O_ALL_LOCAL_COUNT := 0;
+BEGIN
+IF IN_OL_SUPPLY_W_ID <> IN_W_ID THEN
+UPDATE orders
+SET o_all_local = 0
+WHERE o_w_id = IN_W_ID
+AND o_d_id = IN_D_ID
+AND o_c_id = IN_C_ID;
 END IF;
-END LOOP;
-INSERT INTO orders(
-        o_id,
-        o_d_id,
-        o_w_id,
-        o_c_id,
-        o_entry_d,
-        o_carrier_id,
-        o_ol_cnt,
-        o_all_local
-    )
-VALUES(
-        N,
-        D_ID,
-        W_ID,
-        C_ID,
-        CURRENT_TIMESTAMP,
-        NULL,
-        NUM_ITEMS,
-        DEFINED_O_ALL_LOCAL_COUNT
-    );
-TOTAL_AMOUNT := 0;
-FOR IDX IN 1..NUMS_ITEMS LOOP
-SELECT s_quantity INTO RETRIEVED_S_QUANTITY
-FROM stock
-WHERE s_w_id = SUPPLIER_WAREHOUSE [IDX]
-    AND s_i_id = ITEM_NUMBER [IDX];
-ADJUSTED_QUANTITY := RETRIEVED_S_QUANTITY - QUANTITY [IDX];
-IF ADJUSTED_QUANTITY < 10 THEN ADJUSTED_QUANTITY := ADJUSTED_QUANTITY + 100;
+FORMATTED_DIST_INFO := 'S_DIST_' || IN_D_ID;
+SELECT s.s_quantity INTO RETRIEVED_S_QUANTITY
+FROM stock s
+WHERE s.s_w_id = IN_OL_SUPPLY_W_ID
+    AND s.s_i_id = IN_OL_I_ID;
+ADJUSTED_S_QUANTITY := RETRIEVED_S_QUANTITY - IN_OL_QUANTITY;
+IF ADJUSTED_S_QUANTITY < 10 THEN 
+ADJUSTED_S_QUANTITY := ADJUSTED_S_QUANTITY + 100;
 END IF;
-UPDATE stock
-SET s_quantity = ADJUSTED_QUANTITY,
-    s_ytd = s_ytd + QUANTITY [IDX],
+UPDATE stock 
+SET s_quantity = ADJUSTED_S_QUANTITY,
+    s_ytd = s_ytd + IN_OL_QUANTITY,
     s_order_cnt = s_order_cnt + 1
-WHERE s_w_id = SUPPLIER_WAREHOUSE [IDX]
-    AND s_i_id = ITEM_NUMBER [IDX];
-IF SUPPLIER_WAREHOUSE [IDX] <> W_ID THEN
+WHERE s_w_id = IN_OL_SUPPLY_W_ID
+    AND s_i_id = IN_OL_I_ID;
+IF IN_OL_SUPPLY_W_ID <> IN_W_ID THEN
 UPDATE stock
 SET s_remote_cnt = s_remote_cnt + 1
-WHERE s_w_id = SUPPLIER_WAREHOUSE [IDX]
-    AND s_i_id = ITEM_NUMBER [IDX];
+WHERE s_w_id = IN_OL_SUPPLY_W_ID
+    AND s_i_id = IN_OL_I_ID;
 END IF;
 SELECT i_price INTO RETRIEVED_I_PRICE
-FROM item
-WHERE i_id = ITEM_NUMBER [IDX];
-ITEM_AMOUNT := QUANTITY [IDX] * RETRIEVED_I_PRICE;
-TOTAL_AMOUNT := TOTAL_AMOUNT + ITEM_AMOUNT;
+FROM item i
+WHERE i.i_id = IN_OL_I_ID;
+SELECT i_name INTO ITEM_NAME
+FROM item i
+WHERE i.i_id = IN_OL_I_ID;
+ITEM_AMOUNT := IN_OL_QUANTITY * RETRIEVED_I_PRICE;
 INSERT INTO order_lines(
         ol_o_id,
         ol_d_id,
@@ -115,29 +179,17 @@ INSERT INTO order_lines(
     )
 VALUES(
         N,
-        D_ID,
-        W_ID,
-        IDX,
-        ITEM_NUMBER [IDX],
-        SUPPLIER_WAREHOUSE [IDX],
-        QUANTITY [IDX],
+        IN_D_ID,
+        IN_W_ID,
+        IN_OL_NUMBER,
+        IN_OL_I_ID,
+        IN_OL_SUPPLY_W_ID,
+        IN_OL_QUANTITY,
         ITEM_AMOUNT,
         NULL,
         FORMATTED_DIST_INFO
-    );
-END LOOP;
-SELECT d_tax INTO RETRIEVED_D_TAX
-FROM district
-WHERE d_w_id = W_ID
-    AND d_id = D_ID;
-SELECT w_tax INTO RETRIEVED_W_TAX
-FROM warehouse
-WHERE w_id = W_ID;
-SELECT c_discount INTO RETRIEVED_C_DISCOUNT
-FROM customer
-WHERE c_id = C_ID;
-TOTAL_AMOUNT := TOTAL_AMOUNT * (1 - RETRIEVED_D_TAX + RETRIEVED_W_TAX) * (1 - RETRIEVED_C_DISCOUNT);
-SELECT TOTAL_AMOUNT;
+);
+RETURN (ITEM_NAME, ITEM_AMOUNT, IN_OL_SUPPLY_W_ID, IN_OL_QUANTITY, ADJUSTED_S_QUANTITY);
 END;
 $$ LANGUAGE plpgsql;
 """)

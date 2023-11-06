@@ -47,11 +47,22 @@ def execute(path, connection):
                         cursor.execute(f"""CALL new_order_add_orderline({w_id, d_id, c_id, N, i, i_id, i_supplier_w_id, i_quantity});""")
                         i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = cursor.fetchAll()
                         TOTAL_AMOUNT = TOTAL_AMOUNT + ol_amount
+                        print(f"Item {i}: ({i_name} {ol_supply_w_id} {ol_quantity} {ol_amount})\tStock quantity: {stock_quantity_updated}")
                     TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + w_tax + d_tax) * (1 - c_discount)
+                    print(f"Customer Identifier:({w_id} {d_id} {c_id})\tlastname: {c_last}\tcredit: {c_credit}\tdiscount: {c_discount})")
+                    print(f"Warehouse tax rate: {w_tax}\tDistrict tax rate: {d_tax}")
+                    print(f"Number of items: {nums_item}\tTotal Amount: {TOTAL_AMOUNT}")
                 elif xactType == "P":
                     w_id, d_id, c_id, payment = splitLine[1:]
                     cursor.execute(f"""CALL payment({w_id, d_id, c_id, payment});""")
-                    customer_detail, district_detail, warehouse_detail = cursor.fetchAll()
+                    returnVal = cursor.fetchAll()
+                    c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_limit, c_discount = returnVal[0]
+                    d_street_1, d_street_2, d_city, d_state, d_zip = returnVal[1]
+                    w_street_1, w_street_2, w_city, w_state, w_zip = returnVal[2]
+                    print(f"Customer Identifier:({w_id} {d_id} {c_id})\tName:({c_first} {c_middle} {c_last})\tAddress: {c_street_1} {c_street_2} {c_city} {c_state} {c_zip}\t {c_phone} {c_credit} {c_credit_limit} {c_discount}")
+                    print(f"Warehouse address: {w_street_1} {w_street_2} {w_city} {w_state} {w_zip}")
+                    print(f"District address: {d_street_1} {d_street_2} {d_city} {d_state} {d_zip}")
+                    print(f"Payment: {payment}")
                 elif xactType == "D":
                     w_id, carrier_id = splitLine[1:]
                     cursor.execute(f"""CALL delivery({w_id}, {carrier_id});""")

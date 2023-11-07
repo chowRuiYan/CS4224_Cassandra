@@ -35,7 +35,7 @@ def execute(path, connection):
             try:
                 if xactType == "N":
                     w_id, d_id, c_id, nums_item = splitLine[1:]
-                    cursor.execute(f"""CALL new_order_init({w_id, d_id, c_id, M});""")
+                    cursor.execute(f"""CALL new_order_init({w_id, d_id, c_id, nums_item});""")
                     N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchAll()
                     TOTAL_AMOUNT = 0
                     for i in nums_item:

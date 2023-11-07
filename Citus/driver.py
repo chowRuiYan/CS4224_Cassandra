@@ -72,14 +72,14 @@ def execute(path, connection):
                 elif xactType == "O":
                     c_w_id, c_d_id, c_id = splitLine[1:]
                     cursor.execute(f"""SELECT order_status_1({c_w_id}, {c_d_id}, {c_id});""")
-                    c_first, c_middle, c_last, c_balance = cursor.fetchall()[0]
-                    print(f"Customer: ({c_first} {c_middle} {c_last})\tBalance: {c_balance}")
+                    c_first, c_middle, c_last, c_balance = cursor.fetchall()[0][0][1:-1].split(',')
+                    print(f"Customer: {c_first} {c_middle} {c_last}\nCustomer Balance: {c_balance}")
                     cursor.execute(f"""SELECT order_status_2({c_w_id}, {c_d_id}, {c_id});""")
-                    orderlines = cursor.fetchall()[0]
-                    o_id, o_entry_d, o_carrier_id, _, _, _, _, _ = orderlines[0]
-                    print(f"Customer Last Order: {o_id}\tO_ENTRY_D: {o_entry_d}\tO_CARRIER_ID: {o_carrier_id}")
+                    orderlines = cursor.fetchall()
+                    o_id, o_entry_d, o_carrier_id, _, _, _, _, _ = orderlines[0][0][1:-1].split(',')
+                    print(f"Customer Last Order: {o_id}\nOrder Entry Datetime: {o_entry_d}\nCarrier: {o_carrier_id}\nItems:")
                     for orderline in orderlines:
-                        _, _, _, ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_delivery_d = orderline
+                        _, _, _, ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_delivery_d = orderline[0][1:-1].split(',')
                         print(f"{ol_i_id} {ol_supply_w_id} {ol_quantity} {ol_amount} {ol_delivery_d}")
 
                 elif xactType == "S":

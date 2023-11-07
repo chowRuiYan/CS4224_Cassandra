@@ -34,21 +34,24 @@ def execute(path, connection):
             # Switch Case for Xact Type
             try:
                 if xactType == "N":
-                    w_id, d_id, c_id, nums_item = splitLine[1:]
+                    c_id, w_id, d_id, nums_item = splitLine[1:]
                     cursor.execute(f"""SELECT new_order_init({w_id}, {d_id}, {c_id}, {nums_item});""")
-                    N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchall()[0]
+                    output = cursor.fetchall()[0][0][1:-1].split(',')
+                    N, c_last, c_credit, c_discount, w_tax, d_tax = output
+
                     TOTAL_AMOUNT = 0
-                    for i in nums_item:
+                    for i in range(1, int(nums_item)+1):
                         item = file.readline()
                         item_inputs = item.strip().split(',')
                         i_id = item_inputs[0]
                         i_supplier_w_id = item_inputs[1]
                         i_quantity = item_inputs[2]
-                        cursor.execute(f"""SELECT new_order_add_orderline({w_id, d_id, c_id, N, i, i_id, i_supplier_w_id, i_quantity});""")
-                        i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = cursor.fetchAll()[0]
-                        TOTAL_AMOUNT = TOTAL_AMOUNT + ol_amount
+                        cursor.execute(f"""SELECT new_order_add_orderline({w_id}, {d_id}, {c_id}, {N}, {i}, {i_id}, {i_supplier_w_id}, {i_quantity});""")
+                        item_output = cursor.fetchall()[0][0][1:-1].split(',')
+                        i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = item_output
+                        TOTAL_AMOUNT = TOTAL_AMOUNT + float(ol_amount)
                         print(f"Item {i}: ({i_name} {ol_supply_w_id} {ol_quantity} {ol_amount})\tStock quantity: {stock_quantity_updated}")
-                    TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + w_tax + d_tax) * (1 - c_discount)
+                    TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + float(w_tax) + float(d_tax)) * (1 - float(c_discount))
                     print(f"Customer Identifier:({w_id} {d_id} {c_id})\tlastname: {c_last}\tcredit: {c_credit}\tdiscount: {c_discount})")
                     print(f"Warehouse tax rate: {w_tax}\tDistrict tax rate: {d_tax}")
                     print(f"Number of items: {nums_item}\tTotal Amount: {TOTAL_AMOUNT}")

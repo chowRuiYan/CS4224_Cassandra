@@ -35,8 +35,8 @@ def execute(path, connection):
             try:
                 if xactType == "N":
                     w_id, d_id, c_id, nums_item = splitLine[1:]
-                    cursor.execute(f"""CALL new_order_init({w_id, d_id, c_id, nums_item});""")
-                    N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchAll()
+                    cursor.execute(f"""SELECT new_order_init({w_id}, {d_id}, {c_id}, {nums_item});""")
+                    N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchall()[0]
                     TOTAL_AMOUNT = 0
                     for i in nums_item:
                         item = file.readline()
@@ -44,8 +44,8 @@ def execute(path, connection):
                         i_id = item_inputs[0]
                         i_supplier_w_id = item_inputs[1]
                         i_quantity = item_inputs[2]
-                        cursor.execute(f"""CALL new_order_add_orderline({w_id, d_id, c_id, N, i, i_id, i_supplier_w_id, i_quantity});""")
-                        i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = cursor.fetchAll()
+                        cursor.execute(f"""SELECT new_order_add_orderline({w_id, d_id, c_id, N, i, i_id, i_supplier_w_id, i_quantity});""")
+                        i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = cursor.fetchAll()[0]
                         TOTAL_AMOUNT = TOTAL_AMOUNT + ol_amount
                         print(f"Item {i}: ({i_name} {ol_supply_w_id} {ol_quantity} {ol_amount})\tStock quantity: {stock_quantity_updated}")
                     TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + w_tax + d_tax) * (1 - c_discount)
@@ -54,11 +54,13 @@ def execute(path, connection):
                     print(f"Number of items: {nums_item}\tTotal Amount: {TOTAL_AMOUNT}")
                 elif xactType == "P":
                     w_id, d_id, c_id, payment = splitLine[1:]
-                    cursor.execute(f"""CALL payment({w_id, d_id, c_id, payment});""")
-                    returnVal = cursor.fetchAll()
-                    c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_limit, c_discount = returnVal[0]
-                    d_street_1, d_street_2, d_city, d_state, d_zip = returnVal[1]
-                    w_street_1, w_street_2, w_city, w_state, w_zip = returnVal[2]
+                    cursor.execute(f"""SELECT payment({w_id}, {d_id}, {c_id}, {payment});""")
+                    returnVal = eval(cursor.fetchall()[0][0])
+                    cust, district, warehouse = returnVal
+                    print(cust, district, warehouse)
+                    c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_limit, c_discount = eval(cust)
+                    d_street_1, d_street_2, d_city, d_state, d_zip = eval(district)
+                    w_street_1, w_street_2, w_city, w_state, w_zip = eval(warehouse)
                     print(f"Customer Identifier:({w_id} {d_id} {c_id})\tName:({c_first} {c_middle} {c_last})\tAddress: {c_street_1} {c_street_2} {c_city} {c_state} {c_zip}\t {c_phone} {c_credit} {c_credit_limit} {c_discount}")
                     print(f"Warehouse address: {w_street_1} {w_street_2} {w_city} {w_state} {w_zip}")
                     print(f"District address: {d_street_1} {d_street_2} {d_city} {d_state} {d_zip}")
@@ -105,7 +107,7 @@ def execute(path, connection):
                         print(f"Order Number: {o_id}, O_ENTRY_D: {o_entry_d}")
                         print(f"Customer Name: ({c_first} {c_middle} {c_last})")
 
-                        cursor.execute(f"""SELECT order_item({o_id}, {c_id});""")
+                        cursor.execute(f"""SELECT order_item({o_id});""")
                         orderItems = cursor.fetchall()[0]
 
                         # Find most popular item in O
@@ -171,7 +173,7 @@ def execute(path, connection):
                         c_w_id, c_d_id, other_c_id = otherCustomer
 
                         # Get other Customer OrderItemLists: o_w_id, o_d_id, o_c_id , o_id , ol_i_id 
-                        cursor.execute(f"""SELECT get_other_customer_order_items({c_w_id}, {c_d_id}, {other_c_id})""")
+                        cursor.execute(f"""SELECT get_customer_order_items({c_w_id}, {c_d_id}, {other_c_id})""")
                         otherCustomerOrderItems = cursor.fetchall()[0]
             
                         found = 0
@@ -222,7 +224,7 @@ if __name__ == "__main__":
         password=db_password
     )
 
-    execute(f'project_files/xact_files/{client}.txt', connection)
+    execute(f'../project_files/xact_files/{client}.txt', connection)
     connection.close()
 
     # Get Stats

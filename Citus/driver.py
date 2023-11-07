@@ -55,12 +55,11 @@ def execute(path, connection):
                 elif xactType == "P":
                     w_id, d_id, c_id, payment = splitLine[1:]
                     cursor.execute(f"""SELECT payment({w_id}, {d_id}, {c_id}, {payment});""")
-                    returnVal = eval(cursor.fetchall()[0][0])
+                    returnVal = eval(cursor.fetchall()[0][0][1:-1])
                     cust, district, warehouse = returnVal
-                    print(cust, district, warehouse)
-                    c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_limit, c_discount = eval(cust)
-                    d_street_1, d_street_2, d_city, d_state, d_zip = eval(district)
-                    w_street_1, w_street_2, w_city, w_state, w_zip = eval(warehouse)
+                    c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_credit, c_credit_limit, c_discount = cust[2:-15].split(',')
+                    d_street_1, d_street_2, d_city, d_state, d_zip = district[2:-6].split(',')
+                    w_street_1, w_street_2, w_city, w_state, w_zip = warehouse[2:-6].split(',')
                     print(f"Customer Identifier:({w_id} {d_id} {c_id})\tName:({c_first} {c_middle} {c_last})\tAddress: {c_street_1} {c_street_2} {c_city} {c_state} {c_zip}\t {c_phone} {c_credit} {c_credit_limit} {c_discount}")
                     print(f"Warehouse address: {w_street_1} {w_street_2} {w_city} {w_state} {w_zip}")
                     print(f"District address: {d_street_1} {d_street_2} {d_city} {d_state} {d_zip}")

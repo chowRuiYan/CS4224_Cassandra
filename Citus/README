@@ -3,7 +3,12 @@
 2. Run schema.py
 3. Run load_table.py
 4. Run procedures.py
+5. Run driver.py <number from 0-19> to test
 
+## TODO
+1. Test 1, 6, 7 and 8
+
+3. Implement process_output.py
 
 Misc:
 - No module named 'psycopg2'

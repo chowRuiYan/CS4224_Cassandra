@@ -212,11 +212,9 @@ CREATE TYPE payment_customer AS (
     C_STATE CHAR,
     C_ZIP CHAR,
     C_PHONE CHAR,
-    C_SINCE TIMESTAMP,
     C_CREDIT CHAR,
     C_CREDIT_LIMIT DECIMAL,
-    C_DISCOUNT DECIMAL,
-    C_BALANCE DECIMAL
+    C_DISCOUNT DECIMAL
 );
 """)
 cursor.execute("""
@@ -270,7 +268,7 @@ SET c_balance = c_balance - PAYMENT,
 WHERE c_w_id = IN_C_W_ID
     AND c_d_id = IN_C_D_ID
     AND c_id = IN_C_ID;
-SELECT (c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_credit_limit, c_discount, c_balance) INTO CUSTOMER_DETAIL
+SELECT (c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_credit, c_credit_limit, c_discount) INTO CUSTOMER_DETAIL
 FROM customer
 WHERE c_w_id = IN_C_W_ID
     AND c_d_id = IN_C_D_ID

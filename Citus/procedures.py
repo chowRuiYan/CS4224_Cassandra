@@ -294,29 +294,34 @@ cursor.execute("""
 CREATE OR REPLACE PROCEDURE delivery(W_ID INT, CARRIER_ID INT) AS $$
 DECLARE DISTRICT_NO INT;
 N INT;
-B INT;
 C INT;
+B INT;
 BEGIN FOR DISTRICT_NO IN 1..10 LOOP
-SELECT MIN(o.o_id) INTO N
+SELECT MIN(o_id) INTO N
 FROM orders o
-    JOIN district d ON d.d_id = o.o_d_id
-    AND d.d_w_id = o.o_w_id
-WHERE d.d_id = DISTRICT_NO
-    AND d.d_w_id = W_ID
-    AND o.o_carrier_id = NULL;
+WHERE o_w_id = W_ID
+	AND o_d_id = DISTRICT_NO
+    AND o_carrier_id = -1;
 SELECT o_c_id INTO C
 FROM orders
-WHERE o_id = N;
-SELECT SUM(ol_amount) INTO B
-FROM order_lines
-WHERE ol_o_id = N;
+WHERE o_w_id = W_ID
+	AND o_d_id = DISTRICT_NO
+	AND o_id = N;
 UPDATE orders
 SET o_carrier_id = CARRIER_ID
-WHERE o_id = N;
-
+WHERE o_w_id = W_ID
+	AND o_d_id = DISTRICT_NO
+	AND o_id = N;
+SELECT SUM(ol_amount) INTO B
+FROM order_lines
+WHERE ol_w_id = W_ID
+	AND ol_d_id = DISTRICT_NO
+	AND ol_o_id = N;
 UPDATE order_lines
 SET ol_delivery_d = CURRENT_TIMESTAMP
-WHERE ol_o_id = N;
+WHERE ol_w_id = W_ID
+	AND ol_d_id = DISTRICT_NO
+	AND ol_o_id = N;
 UPDATE customer
 SET c_balance = c_balance - B,
     c_delivery_cnt = c_delivery_cnt + 1
@@ -340,17 +345,17 @@ CREATE TYPE order_status_1_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION order_status_1(C_W_ID INT, C_D_ID INT, C_ID INT) RETURNS order_status_1_type AS $$
+CREATE OR REPLACE FUNCTION order_status_1(W_ID INT, D_ID INT, CUST_ID INT) RETURNS SETOF order_status_1_type AS $$
 BEGIN
-RETURN (SELECT 
-    c_first,
+RETURN QUERY
+SELECT c_first,
     c_middle,
     c_last,
     c_balance
 FROM customer
-WHERE c_w_id = C_W_ID
-    AND c_d_id = C_D_ID
-    AND c_id = C_ID);
+WHERE c_w_id = W_ID
+    AND c_d_id = D_ID
+    AND c_id = CUST_ID;
 END;
 $$ LANGUAGE plpgsql;
 """)
@@ -369,31 +374,35 @@ CREATE TYPE order_status_2_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION order_status_2(C_W_ID INT, C_D_ID INT, C_ID INT) RETURNS order_status_2_type AS $$
-DECLARE LAST_ORDER INT;
-O_ID INT;
-O_ENTRY_D TIMESTAMP;
-O_CARRIER_ID INT;
+CREATE OR REPLACE FUNCTION order_status_2(C_W_ID INT, C_D_ID INT, C_ID INT) RETURNS SETOF order_status_2_type AS $$
+DECLARE LAST_ORDER_ID INT;
+LAST_ORDER_ENTRY_D TIMESTAMP;
+LAST_ORDER_CARRIER_ID INT;
 BEGIN
-SELECT MAX(o_id) INTO LAST_ORDER
+SELECT MAX(o_id) INTO LAST_ORDER_ID
 FROM orders
 WHERE o_w_id = C_W_ID
     AND o_d_id = C_D_ID
     AND o_c_id = C_ID;
-SELECT o_id, o_entry_d, o_carrier_id INTO O_ID, O_ENTRY_D, O_CARRIER_ID
+SELECT o_entry_d, o_carrier_id
+INTO LAST_ORDER_ENTRY_D, LAST_ORDER_CARRIER_ID
 FROM orders
-WHERE o_id = LAST_ORDER;
-RETURN (SELECT
-    O_ID,
-    O_ENTRY_D,
-    O_CARRIER_ID,
+WHERE o_w_id = C_W_ID
+    AND o_d_id = C_D_ID
+    AND o_id = LAST_ORDER_ID;
+RETURN QUERY
+SELECT LAST_ORDER_ID,
+    LAST_ORDER_ENTRY_D,
+    LAST_ORDER_CARRIER_ID,
     ol_i_id,
     ol_supply_w_id,
     ol_quantity,
     ol_amount,
     ol_delivery_d
 FROM order_lines
-WHERE ol_o_id = LAST_ORDER);
+WHERE ol_w_id = C_W_ID
+    AND ol_d_id = C_D_ID
+    AND ol_o_id = LAST_ORDER_ID;
 END;
 $$ LANGUAGE plpgsql;
 """)
@@ -410,7 +419,7 @@ SELECT 1+MAX(o_id) INTO N
 FROM orders
 WHERE o_w_id = W_ID
     AND o_d_id = D_ID;
-WITH S(ol_i_id) AS (
+WITH S AS (
     SELECT DISTINCT OL_I_ID
     FROM order_lines
     WHERE ol_w_id = W_ID
@@ -419,7 +428,7 @@ WITH S(ol_i_id) AS (
 )
 SELECT COUNT(*) INTO RESULT
 FROM stock JOIN S ON stock.s_i_id = S.ol_i_id
-WHERE s_w_id = W_ID
+WHERE stock.s_w_id = W_ID
     AND s_quantity < T;
 RETURN RESULT;
 END;

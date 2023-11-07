@@ -172,10 +172,8 @@ CREATE TABLE IF NOT EXISTS stock (
 )
 """)
 print("Finished creating stock")
-
 print("Commiting")
 connection.commit()
-
 
 print("Make item reference table")
 cursor.execute("""
@@ -194,9 +192,6 @@ print("Distribute warehouse")
 cursor.execute("""
 SELECT create_distributed_table('warehouse', 'w_id');
 """)
-print("Commiting")
-connection.commit()
-
 print("Distribute district")
 cursor.execute("""
 SELECT create_distributed_table('district', 'd_w_id', colocate_with => 'warehouse');

@@ -199,6 +199,7 @@ def execute(path, connection):
                     print('Invalid Xact Type')
             
             except Exception as e:
+                    
                     print(e)
 
             connection.commit()

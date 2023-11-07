@@ -39,7 +39,7 @@ def execute(path, connection):
                     N, c_last, c_credit, c_discount, w_tax, d_tax = cursor.fetchAll()
                     TOTAL_AMOUNT = 0
                     for i in nums_item:
-                        item = file.readline();
+                        item = file.readline()
                         item_inputs = item.strip().split(',')
                         i_id = item_inputs[0]
                         i_supplier_w_id = item_inputs[1]

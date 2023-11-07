@@ -242,14 +242,11 @@ def related_customer_transaction(w_id, d_id, c_id):
     
     for otherCustomer in otherCustomerOrderItemLists:
         o_w_id, o_d_id, o_c_id = otherCustomer.w_id, otherCustomer.d_id, otherCustomer.c_id
-        print(o_w_id, o_d_id, o_c_id)
 
         specificOtherCustomerOrderItemLists = otherCustomerOrderItemLists[otherCustomerOrderItemLists['w_id'] == o_w_id and
                                                                           otherCustomerOrderItemLists['d_id'] == o_d_id and  
                                                                           otherCustomerOrderItemLists['c_id'] == o_c_id
                                                                         ]
-
-        print(specificOtherCustomerOrderItemLists)
         
         found = False
         # For each order in customer

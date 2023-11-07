@@ -7,3 +7,10 @@
 Misc:
 - No module named 'psycopg2'
 Install sudo, pip3, then install psycopg2
+
+- For docker, to shut down cluster
+Run "COMPOSE_PROJECT_NAME=citus docker-compose down -v"
+
+and start with
+
+Run "COMPOSE_PROJECT_NAME=citus docker-compose up -d"

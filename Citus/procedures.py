@@ -304,32 +304,72 @@ $$ LANGUAGE plpgsql;
 
 # Xact 6
 cursor.execute("""
-CREATE PROCEDURE popular_item(W_ID INT, D_ID INT, L INT) AS $$ BEGIN
+CREATE TYPE last_L_orders_type AS (
+    o_id INT,
+    o_c_id INT,
+    o_entry_d TIMESTAMP,
+    c_first VARCHAR(16),
+    c_middle CHAR(2),
+    c_last VARCHAR(16)
+);
+""")
+
+cursor.execute("""
+CREATE OR REPLACE FUNCTION last_L_orders(W_ID INT, D_ID INT, L INT) RETURNS last_L_orders_type AS $$ BEGIN
 DECLARE N INT;
 SELECT d_next_o_id INTO N
     FROM district
     WHERE d_id = D_ID AND d_w_id = W_ID;
-WITH orderSet(o_id) as
-    (SELECT o_id
-        FROM order
-        WHERE o_w_id = W_ID AND o_d_id = D_ID AND o_id >= N-L AND o_id <= N
-    ),
-    maxOrderQuant(ol_o_id, ol_quantity) as
-    (SELECT ol_o_id, max(ol_quantity)
+RETURN (SELECT 
+    o_id, 
+    o_c_id, 
+    o_entry_d,
+    c_first,
+    c_middle,
+    c_last
+    FROM order
+        INNER JOIN customer ON orderItems.c_id = customer.c_id
+    WHERE o_w_id = W_ID AND o_d_id = D_ID AND o_id >= N-L AND o_id <= N
+)
+""")
+
+cursor.execute("""
+CREATE TYPE order_item_type AS (
+    i_name VARCHAR(24),
+    ol_quantity DECIMAL(2, 0)
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION order_item(O_ID INT, C_ID INT) RETURNS order_item_type AS $$ BEGIN
+WITH 
+    orderItems(o_id, o_entry_d, c_id, i_id, ol_quantity) as
+    (SELECT order_lines.ol_o_id, orderSet.o_entry_d, order_lines.ol_i_id, order_lines.ol_quantity)
         FROM order_lines
-        WHERE ol_o_id in orderSet
-        GROUPBY ol_o_id
+        WHERE order_lines.ol_o_id = O_ID
     )
-SELECT 
-    FROM order_lines
-    WHERE ol_o_id in orderSet AND ol_quantity = 
+RETURN (SELECT
+    i_name,          
+    ol_quantity
+FROM orderItems 
+    INNER JOIN item ON orderItems.i_id = item.i_id
+);
 END;
 $$ LANGUAGE plpgsql;
 """)
 
 # Xact 7
 cursor.execute("""
-CREATE PROCEDURE top_balance() AS $$ BEGIN
+CREATE TYPE top_balance_type AS (
+    c_first VARCHAR(16),
+    c_middle CHAR(2),
+    c_last VARCHAR(16),
+    c_balance DECIMAL(12, 2),
+    w_name VARCHAR(10),
+    d_name VARCHAR(10)
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION top_balance() RETURNS popular_item_type AS $$ BEGIN
 WITH slimWarehouse(w_name, w_id) as
     (SELECT w_name, w_id
         FROM warehouse
@@ -338,38 +378,92 @@ WITH slimWarehouse(w_name, w_id) as
     (SELECT d_name, d_id
         FROM district
     )
-SELECT c_first, c_middle, c_last, c_balance, slimWarehouse.w_name, slimDistrict.d_name
+RETURN(SELECT 
+    c_first, 
+    c_middle, 
+    c_last, 
+    c_balance, 
+    w_name, 
+    d_name
     FROM customer 
-    INNER JOIN slimDistrict ON slimDistrict.d_id = customer.C_D_ID 
-    INNER JOIN slimWarehouse ON slimWarehouse.w_id = customer.C_W_ID
+        INNER JOIN slimDistrict ON slimDistrict.d_id = customer.C_D_ID 
+        INNER JOIN slimWarehouse ON slimWarehouse.w_id = customer.C_W_ID
     ORDER BY customer.c_balance DESC
     LIMIT 10;
+)
 END;
 $$ LANGUAGE plpgsql;
 """)
 
-# Xact 8 
+# Xact 8
 cursor.execute("""
-CREATE PROCEDURE getCustomerOrderItems(C_W_ID, C_D_ID, C_ID) AS $$ BEGIN
-SELECT order.o_c_id, order.o_id, order_lines.ol_i_id
+CREATE TYPE get_customer_order_items_type AS (
+    o_w_id INT,
+    o_d_id INT,
+    o_c_id INT,
+    o_id INT,
+    ol_i_id INT
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION get_customer_order_items(C_W_ID, C_D_ID, C_ID) RETURNS get_customer_order_items_type AS $$ BEGIN
+RETURN(SELECT
+    order.o_w_id, 
+    order.o_d_id, 
+    order.o_c_id, 
+    order.o_id, 
+    order_lines.ol_i_id
     FROM order 
         INNER JOIN order_lines ON order.o_id = order_lines.ol_o_id
     WHERE order.o_c_id = C_ID
+)
 END;
 $$ LANGUAGE plpgsql;
 """)
 
 cursor.execute("""
-CREATE PROCEDURE getOtherCustomerOrderItems(C_W_ID, C_D_ID, C_ID) AS $$ BEGIN
-WITH diffWarehouse(c_w_id, c_d_id, c_id) as
-    (SELECT c_w_id, c_d_id, c_id
-        FROM customer
-        WHERE c_w_id <> C_W_ID AND c_id <> C_ID
-    ),
-SELECT order.o_w_id, order.o_d_id, order.o_c_id, order.o_id, order_lines.ol_i_id
-        FROM order 
-            INNER JOIN order_lines ON order.o_id = order_lines.ol_o_id
-        WHERE order.o_c_id IN (SELECT c_id FROM diffWarehouse)
+CREATE TYPE get_other_customer_type AS (
+    w_id INT,
+    d_id INT,
+    c_id INT
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION get_other_customer(C_W_ID, C_D_ID, C_ID) 
+    RETURNS get_other_customer_type AS $$ BEGIN
+RETURN(SELECT 
+    c_w_id, 
+    c_d_id, 
+    c_id
+    FROM customer
+    WHERE c_w_id <> C_W_ID
+)
+END;
+$$ LANGUAGE plpgsql;
+""")
+
+cursor.execute("""
+CREATE TYPE get_other_customer_order_items_type AS (
+    o_w_id INT,
+    o_d_id INT,
+    o_c_id INT,
+    o_id INT,
+    ol_i_id INT
+);
+""")
+cursor.execute("""
+CREATE OR REPLACE FUNCTION get_other_customer_order_items(C_W_ID, C_D_ID, C_ID) 
+    RETURNS get_other_customer_order_items_type AS $$ BEGIN
+RETURN(SELECT 
+    order.o_w_id, 
+    order.o_d_id, 
+    order.o_c_id, 
+    order.o_id, 
+    order_lines.ol_i_id
+    FROM order 
+        INNER JOIN order_lines ON order.o_id = order_lines.ol_o_id
+    WHERE o_w_id = C_W_ID AND o_d_id = C_D_ID AND o_c_id = C_ID
+)
 END;
 $$ LANGUAGE plpgsql;
 """)

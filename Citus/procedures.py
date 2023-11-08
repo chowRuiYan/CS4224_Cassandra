@@ -448,12 +448,13 @@ CREATE TYPE last_L_orders_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION last_L_orders(W_ID INT, D_ID INT, L INT) RETURNS SETOF last_L_orders_type AS $$
+CREATE OR REPLACE FUNCTION last_L_orders(IN_W_ID INT, IN_D_ID INT, L INT) RETURNS SETOF last_L_orders_type AS $$
 DECLARE N INT;
 BEGIN
+SET LOCAL citus.enable_repartition_joins TO true;
 SELECT d_next_o_id INTO N
     FROM district
-    WHERE d_id = D_ID AND d_w_id = W_ID;
+    WHERE district.d_id = IN_D_ID AND d_w_id = IN_W_ID;
 RETURN QUERY 
 SELECT 
     o_id, 
@@ -463,8 +464,10 @@ SELECT
     c_middle,
     c_last
     FROM orders
-        INNER JOIN customer ON orderItems.c_id = customer.c_id
-    WHERE o_w_id = W_ID AND o_d_id = D_ID AND o_id >= N-L AND o_id <= N;
+        INNER JOIN customer ON orders.o_c_id = customer.c_id 
+            AND orders.o_w_id = customer.c_w_id 
+            AND orders.o_d_id = customer.c_d_id
+    WHERE o_w_id = IN_W_ID AND o_d_id = IN_D_ID AND o_id >= N-L AND o_id < N;
 END;
 $$ LANGUAGE plpgsql;
 """)
@@ -477,14 +480,20 @@ CREATE TYPE order_item_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION order_item(O_ID INT) RETURNS SETOF order_item_type AS $$ BEGIN
+CREATE OR REPLACE FUNCTION order_item(O_ID INT, W_ID INT, D_ID INT) RETURNS SETOF order_item_type AS $$ BEGIN
 RETURN QUERY
 SELECT
     item.i_name,          
-    orderItems.ol_quantity
-    FROM orderItems 
-        INNER JOIN item ON orderItems.ol_i_id = item.i_id
-    WHERE order_lines.ol_o_id = O_ID;
+    order_lines.ol_quantity
+    FROM order_lines 
+        INNER JOIN item ON order_lines.ol_i_id = item.i_id
+    WHERE order_lines.ol_o_id = O_ID AND order_lines.ol_w_id = W_ID AND order_lines.ol_d_id = D_ID
+        AND ol_quantity = (
+            SELECT MAX(ol_quantity) 
+            FROM order_lines AS ol 
+            WHERE ol.ol_o_id = O_ID 
+                AND ol.ol_w_id = W_ID
+                AND ol.ol_d_id = D_ID);
 END;
 $$ LANGUAGE plpgsql;
 """)

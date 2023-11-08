@@ -55,6 +55,7 @@ def execute(path, connection):
                     print(f"Customer Identifier:({w_id} {d_id} {c_id})\tlastname: {c_last}\tcredit: {c_credit}\tdiscount: {c_discount})")
                     print(f"Warehouse tax rate: {w_tax}\tDistrict tax rate: {d_tax}")
                     print(f"Number of items: {nums_item}\tTotal Amount: {TOTAL_AMOUNT}")
+
                 elif xactType == "P":
                     w_id, d_id, c_id, payment = splitLine[1:]
                     cursor.execute(f"""SELECT payment({w_id}, {d_id}, {c_id}, {payment});""")
@@ -67,6 +68,7 @@ def execute(path, connection):
                     print(f"Warehouse address: {w_street_1} {w_street_2} {w_city} {w_state} {w_zip}")
                     print(f"District address: {d_street_1} {d_street_2} {d_city} {d_state} {d_zip}")
                     print(f"Payment: {payment}")
+
                 elif xactType == "D":
                     w_id, carrier_id = splitLine[1:]
                     cursor.execute(f"""CALL delivery({w_id}, {carrier_id});""")
@@ -91,12 +93,13 @@ def execute(path, connection):
                     print(f"Number Of Items Below Threshold: {count}")
 
                 elif xactType == "I":
+                    w_id, d_id, L = splitLine[1:]
                     print(f"District Identifier: ({w_id}, {d_id})")
                     print(f"Number Of Last Orders To Be Examined: {L}")
 
-                    w_id, d_id, L = splitLine[1:]
                     cursor.execute(f"""SELECT last_L_orders({w_id}, {d_id}, {L});""")
-                    lastLOrders = cursor.fetchall()[0]
+                    lastLOrders = cursor.fetchall()
+                    print(lastLOrders)
 
                     # Stores distinct popular items
                     popularSet = set()
@@ -105,31 +108,32 @@ def execute(path, connection):
                     itemMap = {}
 
                     for order in lastLOrders:
-                        o_id, c_id, o_entry_d, c_first, c_middle, c_last = order
+                        o_id, c_id, o_entry_d, c_first, c_middle, c_last = order[0][1:-1].split(',')
                         print(f"Order Number: {o_id}, O_ENTRY_D: {o_entry_d}")
                         print(f"Customer Name: ({c_first} {c_middle} {c_last})")
 
-                        cursor.execute(f"""SELECT order_item({o_id});""")
-                        orderItems = cursor.fetchall()[0]
+                        cursor.execute(f"""SELECT order_item({o_id}, {w_id}, {d_id});""")
+                        orderItems = cursor.fetchall()
 
                         # Find most popular item in O
                         popular_qty = 0
                         # Used to get popular items from an order
                         popularList = []
                         for orderItem in orderItems:
-                            i_name, ol_quantity = orderItem.i_name, orderItem.ol_quantity
+                            i_name, ol_quantity = orderItem[0][1:-1].split(',')
+                            ol_quantity_int = int(ol_quantity)
             
                             if i_name not in itemMap.keys():
                                 itemMap[i_name] = 1
                             else:
                                 itemMap[i_name] += 1
                             
-                            if ol_quantity > popular_qty:
+                            if ol_quantity_int > popular_qty:
                                 # Found new largest amount
-                                popular_qty = ol_quantity
+                                popular_qty = ol_quantity_int
                                 popularList.clear()
                                 popularList.append((i_name, popular_qty))
-                            elif ol_quantity == popular_qty:
+                            elif ol_quantity_int == popular_qty:
                                 # There can be multiple items with the same quantity
                                 popularList.append((i_name, popular_qty))
                             else:
@@ -139,10 +143,11 @@ def execute(path, connection):
                             # Add item name to set
                             popularSet.add(i[0])
                             print(f"Item Name: {i[0]}\tQuantity Ordered: {i[1]}")
-                        
+
+                    print("\nPercentages")  
                     # Find percentage that contain each popular item
                     for item in popularSet:
-                        percentage = (itemMap[item] / L) * 100
+                        percentage = (itemMap[item] / int(L)) * 100
                         print(f"Item: {item}\tPercentage: {percentage}")
 
                 elif xactType == "T":

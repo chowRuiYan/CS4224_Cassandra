@@ -91,6 +91,13 @@ DELIMITER ','
 """)
 print("Finished copying stock")
 
+print("Copy eight")
+cursor.execute("""
+COPY eight(W_ID, D_ID, O_ID, C_ID, I_ID_LIST)
+FROM '/home/CS4224_Cassandra/project_files/data_files/xact8.csv' 
+DELIMITER ','
+""")
+print("Finished copying eight")
 print("Commiting")
 connection.commit()
 

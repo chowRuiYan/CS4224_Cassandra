@@ -1,6 +1,6 @@
+from collections import Counter
 import psycopg2
 
-import decimal
 import csv
 import time
 import sys
@@ -63,7 +63,7 @@ def execute(path, connection):
                     c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_credit, c_credit_limit, c_discount = cust[2:-15].split(',')
                     d_street_1, d_street_2, d_city, d_state, d_zip = district[2:-6].split(',')
                     w_street_1, w_street_2, w_city, w_state, w_zip = warehouse[2:-6].split(',')
-                    print(f"Customer Identifier:({w_id} {d_id} {c_id})\tName:({c_first} {c_middle} {c_last})\tAddress: {c_street_1} {c_street_2} {c_city} {c_state} {c_zip}\t {c_phone} {c_credit} {c_credit_limit} {c_discount}")
+                    print(f"Customer Identifier:({w_id} {d_id} {c_id})\t\nName:({c_first} {c_middle} {c_last})\t\nAddress: {c_street_1} {c_street_2} {c_city} {c_state} {c_zip}\t {c_phone} {c_credit} {c_credit_limit} {c_discount}")
                     print(f"Warehouse address: {w_street_1} {w_street_2} {w_city} {w_state} {w_zip}")
                     print(f"District address: {d_street_1} {d_street_2} {d_city} {d_state} {d_zip}")
                     print(f"Payment: {payment}")
@@ -160,44 +160,38 @@ def execute(path, connection):
 
                 elif xactType == "R":
                     w_id, d_id, c_id = splitLine[1:]
-                    # To prevent duplicate results
-                    relatedCustomerSet = set()
                     
-                    # Get Customer OrderItemLists: o_w_id, o_d_id, o_c_id , o_id , ol_i_id 
+                    # Get Customer OrderItemLists: w_id, d_id, c_id , o_id , i_id
                     cursor.execute(f"""SELECT get_customer_order_items({w_id}, {d_id}, {c_id})""")
-                    thisCustomerOrderItemLists = cursor.fetchall()[0]
+                    customerOrderItems = cursor.fetchall()
                     
                     # Get all other customers from other warehouse and district
-                    cursor.execute(f"""SELECT get_other_customer({w_id}, {d_id}, {c_id})""")
-                    otherCustomers = cursor.fetchall()[0]
+                    cursor.execute(f"""SELECT get_other_customer_order_items({w_id}, {d_id}, {c_id})""")
+                    otherCustomersOrderItems = cursor.fetchall()
 
-                    for otherCustomer in otherCustomers:
-                        c_w_id, c_d_id, other_c_id = otherCustomer
+                    commonCounter = Counter()
+                    # For each other customer order
+                    for orderItem in otherCustomersOrderItems:
+                        processedOtherCustomerOrder = orderItem[0][1:-1].split(',')
+                        # For each order in this customer
+                        for customerOrderItem in customerOrderItems:
+                            processedCustomerOrder = customerOrderItem[0][1:-1].split(',')
+                            # Process the items in the order
+                            otherCustomerOrderItems = processedOtherCustomerOrder[4].split('/')
+                            thisCustomerOrderItems = processedCustomerOrder[4].split('/')
 
-                        # Get other Customer OrderItemLists: o_w_id, o_d_id, o_c_id , o_id , ol_i_id 
-                        cursor.execute(f"""SELECT get_customer_order_items({c_w_id}, {c_d_id}, {other_c_id})""")
-                        otherCustomerOrderItems = cursor.fetchall()[0]
-            
-                        found = 0
-                        # For each order in customer
-                        for custOrderItemList in otherCustomerOrderItems:
-                            # For each order in other customer
-                            for thisCustomerOrderItemList in thisCustomerOrderItemLists:
-                                # If ol_i_id is the same
-                                if custOrderItemList[4] == thisCustomerOrderItemList[4]:
-                                    found += 1
-                                    break
-                            if found >= 2:
-                                custIdTuple = (c_w_id, c_d_id, other_c_id)
-                                relatedCustomerSet.add(custIdTuple)
-                                break
-                    
+                            for otherCustomerOrderItem in otherCustomerOrderItems:
+                                if otherCustomerOrderItem in thisCustomerOrderItems:
+                                    commonCounter[tuple(processedOtherCustomerOrder[:4])] += 1
+
                     print(f'Customer: ({w_id}, {d_id}, {c_id})\nRelated Customer(s):')
                     index = 0
-                    for custId in relatedCustomerSet:
-                        index += 1
-                        w, d, c = custId
-                        print(f'{index}. ({w}, {d}, {c})')
+                    print(commonCounter)
+                    for key in commonCounter.keys():
+                        if commonCounter[key] >= 2:
+                            w, d, c, _ = key
+                            index += 1
+                            print(f'{index}. ({w}, {d}, {c})')
 
                 else:
                     print('Invalid Xact Type')

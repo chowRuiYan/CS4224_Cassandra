@@ -448,13 +448,14 @@ CREATE TYPE last_L_orders_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION last_L_orders(W_ID INT, D_ID INT, L INT) RETURNS last_L_orders_type AS $$
+CREATE OR REPLACE FUNCTION last_L_orders(W_ID INT, D_ID INT, L INT) RETURNS SETOF last_L_orders_type AS $$
 DECLARE N INT;
 BEGIN
 SELECT d_next_o_id INTO N
     FROM district
     WHERE d_id = D_ID AND d_w_id = W_ID;
-RETURN (SELECT 
+RETURN QUERY 
+SELECT 
     o_id, 
     o_c_id, 
     o_entry_d,
@@ -463,8 +464,7 @@ RETURN (SELECT
     c_last
     FROM orders
         INNER JOIN customer ON orderItems.c_id = customer.c_id
-    WHERE o_w_id = W_ID AND o_d_id = D_ID AND o_id >= N-L AND o_id <= N
-);
+    WHERE o_w_id = W_ID AND o_d_id = D_ID AND o_id >= N-L AND o_id <= N;
 END;
 $$ LANGUAGE plpgsql;
 """)
@@ -477,14 +477,14 @@ CREATE TYPE order_item_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION order_item(O_ID INT) RETURNS order_item_type AS $$ BEGIN
-RETURN (SELECT
+CREATE OR REPLACE FUNCTION order_item(O_ID INT) RETURNS SETOF order_item_type AS $$ BEGIN
+RETURN QUERY
+SELECT
     item.i_name,          
     orderItems.ol_quantity
     FROM orderItems 
         INNER JOIN item ON orderItems.ol_i_id = item.i_id
-    WHERE order_lines.ol_o_id = O_ID
-);
+    WHERE order_lines.ol_o_id = O_ID;
 END;
 $$ LANGUAGE plpgsql;
 """)
@@ -504,20 +504,20 @@ CREATE TYPE top_balance_type AS (
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION top_balance() RETURNS top_balance_type AS $$ BEGIN
-RETURN(SELECT 
+CREATE OR REPLACE FUNCTION top_balance() RETURNS SETOF top_balance_type AS $$ BEGIN
+RETURN QUERY
+SELECT 
     c_first, 
     c_middle, 
     c_last, 
     c_balance,
-    'w_name',
-    'd_name'
+    w_name,
+    d_name
     FROM customer 
         INNER JOIN district ON d_id = C_D_ID 
         INNER JOIN warehouse ON w_id = C_W_ID
     ORDER BY customer.c_balance DESC
-    LIMIT 10
-);
+    LIMIT 10;
 END;
 $$ LANGUAGE plpgsql;
 """)
@@ -529,47 +529,41 @@ print("Create functions for Transaction 8: related")
 cursor.execute("""
 DROP TYPE IF EXISTS get_customer_order_items_type CASCADE;
 CREATE TYPE get_customer_order_items_type AS (
-    o_w_id INT,
-    o_d_id INT,
-    o_c_id INT,
+    w_id INT,
+    d_id INT,
+    c_id INT,
     o_id INT,
-    ol_i_id INT
+    i_id_list TEXT
 );
 """)
 cursor.execute("""
-CREATE OR REPLACE FUNCTION get_customer_order_items(C_W_ID INT, C_D_ID INT, C_ID INT) RETURNS get_customer_order_items_type AS $$ BEGIN
-RETURN(SELECT
-    orders.o_w_id,
-    orders.o_d_id, 
-    orders.o_c_id, 
-    orders.o_id, 
-    order_lines.ol_i_id
-    FROM orders
-        INNER JOIN order_lines ON orders.o_id = order_lines.ol_o_id
-    WHERE orders.o_c_id = C_ID AND orders.o_w_id = C_W_ID AND orders.o_d_id = C_D_ID
-);
+CREATE OR REPLACE FUNCTION get_customer_order_items(C_W_ID INT, C_D_ID INT, C_C_ID INT) RETURNS SETOF get_customer_order_items_type 
+    AS $$ BEGIN
+RETURN QUERY
+SELECT DISTINCT 
+    eight.w_id,
+    eight.d_id,
+    eight.c_id,  
+    eight.o_id, 
+    eight.i_id_list
+    FROM eight
+    WHERE eight.c_id = C_C_ID AND eight.d_id = C_D_ID AND eight.w_id = C_W_ID;
 END;
 $$ LANGUAGE plpgsql;
 """)
 
 cursor.execute("""
-DROP TYPE IF EXISTS get_other_customer_type CASCADE;
-CREATE TYPE get_other_customer_type AS (
-    w_id INT,
-    d_id INT,
-    c_id INT
-);
-""")
-cursor.execute("""
-CREATE OR REPLACE FUNCTION get_other_customer(C_W_ID INT, C_D_ID INT, C_ID INT) 
-    RETURNS get_other_customer_type AS $$ BEGIN
-RETURN(SELECT 
-    c_w_id, 
-    c_d_id, 
-    c_id
-    FROM customer
-    WHERE c_w_id <> C_W_ID
-);
+CREATE OR REPLACE FUNCTION get_other_customer_order_items(C_W_ID INT, C_D_ID INT, C_C_ID INT) RETURNS SETOF get_customer_order_items_type
+    AS $$ BEGIN
+RETURN QUERY
+SELECT DISTINCT 
+    eight.w_id,
+    eight.d_id, 
+    eight.c_id,  
+    eight.o_id, 
+    eight.i_id_list
+    FROM eight
+    WHERE eight.w_id <> C_W_ID;
 END;
 $$ LANGUAGE plpgsql;
 """)

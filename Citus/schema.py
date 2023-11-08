@@ -172,6 +172,20 @@ CREATE TABLE IF NOT EXISTS stock (
 )
 """)
 print("Finished creating stock")
+
+print("Create eight")
+cursor.execute("""
+DROP TABLE IF EXISTS eight CASCADE;
+CREATE TABLE IF NOT EXISTS eight (
+    W_ID INT,
+    D_ID INT,
+    O_ID INT,
+    C_ID INT,
+    I_ID_LIST TEXT,
+    PRIMARY KEY (W_ID, D_ID, C_ID, O_ID)
+)
+""")
+print("Finished creating eight")
 print("Commiting")
 connection.commit()
 

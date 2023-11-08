@@ -36,17 +36,17 @@ stock_by_item_select = session.prepare(
 # xact 1
 stock_by_item_update = session.prepare(
     'UPDATE stock_by_item SET s_quantity=?, s_ytd=?, s_order_cnt=?, s_remote_cnt=? WHERE i_id=? AND w_id=?')
-stock_by_item_update.consistency_level = ConsistencyLevel.QUORUM
+stock_by_item_update.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 1
 order_by_wd_insert = session.prepare(
     'INSERT INTO order_by_wd (w_id, d_id, o_id, c_id, o_amount, o_ol_cnt, orderlines, o_carrier_id) VALUES (?, ?, ?, ?, ?, ?, ?, -1)')
-order_by_wd_insert.consistency_level = ConsistencyLevel.QUORUM
+order_by_wd_insert.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 1
 order_by_customer_insert = session.prepare(
     'INSERT INTO order_by_customer (w_id, d_id, c_id, o_id, o_entry_d, orderlines, o_i_id_list, o_carrier_id) VALUES (?, ?, ?, ?, ?, ?, ?, -1)')
-order_by_customer_insert.consistency_level = ConsistencyLevel.QUORUM
+order_by_customer_insert.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 2, 7
 warehouse_select = session.prepare(
@@ -55,6 +55,7 @@ warehouse_select = session.prepare(
 # xact 2
 warehouse_update = session.prepare(
     'UPDATE warehouse SET w_ytd=? WHERE w_id=?')
+warehouse_update.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 2, 7
 district_select = session.prepare(
@@ -63,6 +64,7 @@ district_select = session.prepare(
 # xact 2
 district_update = session.prepare(
     'UPDATE district SET d_ytd=? WHERE w_id=? AND d_id=?')
+district_update.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 2, 3, 4, 6
 customer_by_wd_select = session.prepare(
@@ -71,6 +73,7 @@ customer_by_wd_select = session.prepare(
 # xact 2
 payment_customer_by_wd_update = session.prepare(
     'UPDATE customer_by_wd SET c_balance=?, c_ytd_payment=?, c_payment_cnt=? WHERE w_id=? AND d_id=? AND c_id=?')
+payment_customer_by_wd_update.consistency_level = ConsistencyLevel.LOCAL_QUORUM
 
 # xact 3
 order_by_wd_select_min = session.prepare(

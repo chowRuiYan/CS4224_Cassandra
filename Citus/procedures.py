@@ -333,7 +333,7 @@ WHERE ol_w_id = W_ID
 	AND ol_d_id = DISTRICT_NO
 	AND ol_o_id = N;
 UPDATE customer
-SET c_balance = c_balance - B,
+SET c_balance = c_balance + B,
     c_delivery_cnt = c_delivery_cnt + 1
 WHERE c_id = C;
 END LOOP;

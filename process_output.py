@@ -61,7 +61,7 @@ with open(dbstate, 'w', newline='') as dbstate_csv:
                 ol_quantity.append(ol.ol_quantity)
             
 
-    outputWriter.writerow([max(ol_amount)])
+    outputWriter.writerow([sum(ol_amount)])
     outputWriter.writerow([sum(ol_quantity)])
 
     outputWriter.writerow(session.execute('SELECT sum(S_QUANTITY) FROM stock_by_item').one())

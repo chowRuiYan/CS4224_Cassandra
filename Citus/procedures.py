@@ -266,9 +266,17 @@ SET d_ytd = d_ytd + PAYMENT
 WHERE d_w_id = IN_C_W_ID
     AND d_id = IN_C_D_ID;
 UPDATE customer
-SET c_balance = c_balance - PAYMENT,
-    c_ytd_payment = c_ytd_payment - PAYMENT,
-    c_payment_cnt = c_payment_cnt + 1
+SET c_balance = c_balance - PAYMENT
+WHERE c_w_id = IN_C_W_ID
+AND c_d_id = IN_C_D_ID
+AND c_id = IN_C_ID;
+UPDATE customer               
+SET c_ytd_payment = c_ytd_payment - PAYMENT
+WHERE c_w_id = IN_C_W_ID
+    AND c_d_id = IN_C_D_ID
+    AND c_id = IN_C_ID;
+UPDATE customer               
+SET c_payment_cnt = c_payment_cnt + 1
 WHERE c_w_id = IN_C_W_ID
     AND c_d_id = IN_C_D_ID
     AND c_id = IN_C_ID;

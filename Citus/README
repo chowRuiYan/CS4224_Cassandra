@@ -4,6 +4,7 @@
 3. Run load_table.py
 4. Run procedures.py
 5. Run driver.py <number from 0-19> to test
+6. Run process_output.py
 
 ## TODO
 1. Implement process_output.py

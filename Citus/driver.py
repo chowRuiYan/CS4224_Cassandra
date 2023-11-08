@@ -147,14 +147,13 @@ def execute(path, connection):
 
                 elif xactType == "T":
                     cursor.execute(f"""SELECT top_balance();""")
-                    topBalances = cursor.fetchall()[0]
+                    topBalances = cursor.fetchall()
 
-                    top = sorted(topBalances, key=lambda x: x.c_balance, reverse=True)[:10]
+                    for i in range(len(topBalances)):
+                        t = topBalances[i][0]
 
-                    for i in range(len(top)):
-                        t = top[i]
-                        c_balance, c_first, c_middle, c_last, w_name, d_name = t.c_balance, t.c_first, t.c_middle, t.c_last, t.w_name, t.d_name
-                        
+                        c_balance, c_first, c_middle, c_last, w_name, d_name = t[1:-1].split(',')
+
                         print(f"{i+1}. Customer Name: {c_first} {c_middle} {c_last}")
                         print(f"   Balance: {c_balance}\tWarehouse: {w_name}\tDistrict: {d_name}")
 

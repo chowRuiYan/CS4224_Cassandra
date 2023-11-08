@@ -505,6 +505,7 @@ CREATE TYPE top_balance_type AS (
 """)
 cursor.execute("""
 CREATE OR REPLACE FUNCTION top_balance() RETURNS SETOF top_balance_type AS $$ BEGIN
+SET LOCAL citus.enable_repartition_joins TO true;
 RETURN QUERY
 SELECT 
     c_first, 

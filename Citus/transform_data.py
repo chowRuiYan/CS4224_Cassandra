@@ -2,7 +2,8 @@
 import csv
 from datetime import datetime
 
-path = '/home/CS4224_Cassandra/project_files/data_files/' # Path to data files (Edit if necessary and remember to change the path in load_data.cql as well)
+# path = '/home/CS4224_Cassandra/project_files/data_files/' # Path to data files (Edit if necessary and remember to change the path in load_data.cql as well)
+path = '/home/stuproj/cs4224p/project_files/data_files/'
 order = f'{path}order.csv'
 order_line = f'{path}order-line.csv'
 

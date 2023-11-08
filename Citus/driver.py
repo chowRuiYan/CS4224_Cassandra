@@ -6,9 +6,13 @@ import time
 import sys
 
 # Replace these with your Citus database connection details
-db_host = "localhost"
-db_name = "testDB"
-db_user = "name"
+# db_host = "localhost"
+# db_name = "testDB"
+# db_user = "name"
+# db_password = "password"
+db_host = "xgpf7"
+db_name = "project"
+db_user = "cs4224p"
 db_password = "password"
 
 # Constants

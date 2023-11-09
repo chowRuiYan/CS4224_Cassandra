@@ -38,9 +38,14 @@ session = cluster.connect("cs4224_keyspace")
 dbstate = 'dbstate.csv'
 with open(dbstate, 'w', newline='') as dbstate_csv:
     outputWriter = csv.writer(dbstate_csv)
-    outputWriter.writerow(session.execute('SELECT sum(W_YTD) FROM Warehouse').one())
+    outputWriter.writerow(session.execute('SELECT sum(W_YTD) FROM warehouse').one())
     outputWriter.writerow(session.execute('SELECT sum(D_YTD) FROM district').one())
-    outputWriter.writerow(session.execute('SELECT sum(NEXT_O_ID) FROM info_for_new_order').one())
+    
+    count = 0
+    for row in session.execute('SELECT next_o_id FROM info_for_new_order per partition limit 1'):
+        count += row.next_o_id
+    outputWriter.writerow(count)
+
     outputWriter.writerow(session.execute('SELECT sum(C_BALANCE) FROM customer_by_wd').one())
     outputWriter.writerow(session.execute('SELECT sum(C_YTD_PAYMENT) FROM customer_by_wd').one())
 

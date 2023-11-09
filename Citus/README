@@ -8,3 +8,7 @@
 5. python load_table.py
 6. python procedures.py
 7. ./run.sh xgph10 xgph11 xgph12 xgph13
+
+## Results
+Results are saved to ~/jobresults-citus
+Run process_output.py in this folder

@@ -1,12 +1,37 @@
-## Running Cassandra and Testing
-1. Run transform_data.py
-2. Run schema.cql
-3. Run load_table.cql
-4. Run driver.py <xact_files number> to test xacts
-Repeat for xact 0 to 19
-5. Run process_output.py 
+## Use nodes:
+xgpf3 192.168.51.67
+xgpf4 192.168.51.68
+xgpf5 192.168.51.69
+xgpf6 192.168.51.70
+xgpf7 192.168.51.71
 
+## To start cassandra cluster, for each node:
+1. Change listen_address and rpc_address to their respective IPs in apache-cassandra-4.1.3/conf/cassandra.yaml
+2. Run "sbatch --nodelist={nodename} --partition=long ~/startcassandra.sh"
+3. Ensure node running using squeue (Usually okay if running for about 30s)
 
-Misc:
-- No module named 'cassandra'
-Install sudo, pip3, then install cassandra-driver
+## To check node status:
+squeue -u cs4224p
+
+## To load schema and data:
+1. transform_data.py (Ensure to change data path) 
+2. cp project_files dir to /temp/teamp-cassandra/ 
+3. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/schema.cql
+4. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_order_by_wd.cql (Split up because process can fail if too many child processes spawn)
+5. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_order_by_customer.cql
+6. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_warehouse.cql
+7. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_district.cql
+8. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_info_for_new_order.cql
+9. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_stock_by_item.cql
+10. apache-cassandra-4.1.3/bin/cqlsh 192.168.51.67 9042 -f CS4224_Cassandra/load_table_customer_by_wd.cql
+
+## To run experiement:
+1. sbatch --nodelist=xgpf3 --partition=long ./rundriver1.sh
+2. sbatch --nodelist=xgpf4 --partition=long ./rundriver2.sh
+3. sbatch --nodelist=xgpf5 --partition=long ./rundriver3.sh
+4. sbatch --nodelist=xgpf6 --partition=long ./rundriver4.sh
+5. sbatch --nodelist=xgpf7 --partition=long ./rundriver5.sh
+
+## Results:
+Results will be saved to folder in ~/jobresults
+Run process_output.py in this folder.

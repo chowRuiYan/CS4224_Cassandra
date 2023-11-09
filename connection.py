@@ -51,6 +51,7 @@ order_by_customer_insert.consistency_level = ConsistencyLevel.LOCAL_QUORUM
 # xact 2, 7
 warehouse_select = session.prepare(
     'SELECT * FROM warehouse WHERE w_id=?')
+warehouse_select.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 2
 warehouse_update = session.prepare(
@@ -60,6 +61,7 @@ warehouse_update.consistency_level = ConsistencyLevel.LOCAL_QUORUM
 # xact 2, 7
 district_select = session.prepare(
     'SELECT * FROM district WHERE w_id=? AND d_id=?')
+district_select.consistency_level = ConsistencyLevel.LOCAL_QUORUM 
 
 # xact 2
 district_update = session.prepare(

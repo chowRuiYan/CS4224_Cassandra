@@ -28,7 +28,7 @@ throughputValues = []
 client = 'clients.csv'
 with open(client, 'w', newline='') as client_csv:
     outputWriter = csv.writer(client_csv)
-    for i in range(0, 1):
+    for i in range(0, 20):
         path = f'{i}.csv'
         with open(path, 'r', newline='') as path_csv:
             inputReader = csv.reader(path_csv)

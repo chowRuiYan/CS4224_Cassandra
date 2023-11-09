@@ -200,6 +200,33 @@ RETURN (ITEM_NAME, ITEM_AMOUNT, IN_OL_SUPPLY_W_ID, IN_OL_QUANTITY, ADJUSTED_S_QU
 END;
 $$ LANGUAGE plpgsql;
 """)
+
+cursor.execute("""
+CREATE OR REPLACE PROCEDURE new_order_add_eight(
+    IN_W_ID INT, 
+    IN_D_ID INT, 
+    IN_O_ID INT, 
+    IN_C_ID INT,
+    IN_I_ID_LIST TEXT
+)
+AS $$ BEGIN
+INSERT INTO eight(
+    w_id,
+    d_id,
+    o_id,
+    c_id,
+    i_id_list
+)
+VALUES(
+    IN_W_ID,
+    IN_D_ID,
+    IN_O_ID,
+    IN_C_ID,
+    IN_I_ID_LIST
+);
+END;
+$$ LANGUAGE plpgsql;
+""")
 print("Completed procedure for Transaction 1")
 
 # Xact 2

@@ -1,21 +1,14 @@
-## Running Citus and Testing
-1. Run transform_data.py
-2. Run schema.py
-3. Run load_table.py
-4. Run procedures.py
-5. Run driver.py <number from 0-19> to test
-6. Run process_output.py
+## Running Citus
 
-## TODO
-1. Implement process_output.py
+1. ./startnodes.sh xgph10 xgph11 xgph12 xgph13
+1a. Let the nodes run for a minute
+2. sbatch --nodelist=xgph14 --partition=long start_coordinator.sh xgph10 xgph11 xgph12 xgph13
+3. Ensure hostname is correct in all the python files
+4. python schema.py
+5. python load_table.py
+6. python procedures.py
+7. ./run.sh xgph10 xgph11 xgph12 xgph13
 
-Misc:
-- No module named 'psycopg2'
-Install sudo, pip3, then install psycopg2
-
-- For docker, to shut down cluster
-Run "COMPOSE_PROJECT_NAME=citus docker-compose down -v"
-
-and start with
-
-Run "COMPOSE_PROJECT_NAME=citus docker-compose up -d"
+## Results
+Results are saved to ~/jobresults-citus
+Run process_output.py in this folder

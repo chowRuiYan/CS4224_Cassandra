@@ -197,7 +197,6 @@ def execute(path, connection):
 
                     print(f'Customer: ({w_id}, {d_id}, {c_id})\nRelated Customer(s):')
                     index = 0
-                    print(commonCounter)
                     for key in commonCounter.keys():
                         if commonCounter[key] >= 2:
                             w, d, c, _ = key

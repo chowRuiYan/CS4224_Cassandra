@@ -34,6 +34,7 @@ cluster = Cluster(['192.168.51.67', '192.168.51.68', '192.168.51.69', '192.168.5
 # Use locally
 # cluster = Cluster()
 session = cluster.connect("cs4224_keyspace")
+session.default_timeout = 180
 
 dbstate = 'dbstate.csv'
 with open(dbstate, 'w', newline='') as dbstate_csv:

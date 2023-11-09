@@ -271,7 +271,7 @@ WHERE c_w_id = IN_C_W_ID
 AND c_d_id = IN_C_D_ID
 AND c_id = IN_C_ID;
 UPDATE customer               
-SET c_ytd_payment = c_ytd_payment - PAYMENT
+SET c_ytd_payment = c_ytd_payment + PAYMENT
 WHERE c_w_id = IN_C_W_ID
     AND c_d_id = IN_C_D_ID
     AND c_id = IN_C_ID;

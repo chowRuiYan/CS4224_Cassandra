@@ -4,7 +4,7 @@ from cassandra.cluster import Cluster
 from cassandra import ConsistencyLevel
 
 # Use on soc compute clusters
-cluster = Cluster(['192.168.51.42', '192.168.51.43', '192.168.51.125', '192.168.51.126', '192.168.51.127'])
+cluster = Cluster(['192.168.51.67', '192.168.51.68', '192.168.51.69', '192.168.51.70', '192.168.51.71'])
 # Use locally
 # cluster = Cluster()
 session = cluster.connect("cs4224_keyspace")

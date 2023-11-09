@@ -44,6 +44,7 @@ def execute(path, connection):
                     N, c_last, c_credit, c_discount, w_tax, d_tax = output
 
                     TOTAL_AMOUNT = 0
+                    i_id_list = ''
                     for i in range(1, int(nums_item)+1):
                         item = file.readline()
                         item_inputs = item.strip().split(',')
@@ -53,9 +54,11 @@ def execute(path, connection):
                         cursor.execute(f"""SELECT new_order_add_orderline({w_id}, {d_id}, {c_id}, {N}, {i}, {i_id}, {i_supplier_w_id}, {i_quantity});""")
                         item_output = cursor.fetchall()[0][0][1:-1].split(',')
                         i_name, ol_amount, ol_supply_w_id, ol_quantity, stock_quantity_updated = item_output
+                        i_id_list += f"{i_name}/"
                         TOTAL_AMOUNT = TOTAL_AMOUNT + float(ol_amount)
                         print(f"Item {i}: ({i_name} {ol_supply_w_id} {ol_quantity} {ol_amount})\tStock quantity: {stock_quantity_updated}")
                     TOTAL_AMOUNT = TOTAL_AMOUNT * (1 + float(w_tax) + float(d_tax)) * (1 - float(c_discount))
+                    cursor.execute(f"""CALL new_order_add_eight({w_id}, {d_id}, {o_id}, {c_id}, '{i_id_list}')""")
                     print(f"Customer Identifier:({w_id} {d_id} {c_id})\tlastname: {c_last}\tcredit: {c_credit}\tdiscount: {c_discount})")
                     print(f"Warehouse tax rate: {w_tax}\tDistrict tax rate: {d_tax}")
                     print(f"Number of items: {nums_item}\tTotal Amount: {TOTAL_AMOUNT}")
@@ -228,7 +231,7 @@ if __name__ == "__main__":
         password=db_password
     )
 
-    execute(f'../project_files/xact_files/{client}.txt', connection)
+    execute(f'project_files/xact_files/{client}.txt', connection)
     connection.close()
 
     # Get Stats
